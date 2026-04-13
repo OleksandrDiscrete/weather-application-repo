@@ -2,9 +2,7 @@
 
 include_once "base.php";
 include_once "forecast.php";
-
-use BasePage;
-use Forecast;
+include_once "api.php"; 
 
 class WeeklyForecastPage extends BasePage
 {
@@ -12,6 +10,7 @@ class WeeklyForecastPage extends BasePage
     {
         parent::__construct("Weather Master Weekly Forecast");
     }
+
     private function get_intro_content(): string
     {
         return <<<'HTML'
@@ -20,7 +19,7 @@ class WeeklyForecastPage extends BasePage
                     <div class="intro__wrap">
                         <div class="text-center">
                             <h1>Щотижневий прогноз</h1>
-                            <p class="lead">Перевірте погоду в будь-якому місті України на тиждень!</p>
+                            <p class="lead">Перевірте погоду в будь-якому місті України на найближчі дні!</p>
                             <a class="btn btn-primary mt-2" href="#weather">Переглянути прогноз</a>
                         </div>
                     </div>
@@ -34,36 +33,50 @@ class WeeklyForecastPage extends BasePage
         $target_city = $_COOKIE["city"] ?? null;
 
         if (isset($target_city) && in_array($target_city, Forecast::$cities)) {
-            $heading = "Прогноз на тиждень у місті {$target_city}";
+            $heading = "Прогноз на найближчі дні у місті {$target_city}";
 
-            $weather_data_html = '<ul class="weather__list d-flex flex-wrap gap-3">';
-            for ($i = 0; $i < count(Forecast::$days); $i++) {
-                $dayName = Forecast::$days[$i];
-                $date = date('d.m.Y', strtotime("+$i days"));
+            $apiCityName = Forecast::$apiCityMap[$target_city] ?? $target_city;
+            
+            $apiClient = new WeatherApiClient("134335a027cf4d58a78231326261304"); 
+            
+            $forecastData = $apiClient->getForecast($apiCityName, 3);
 
-                $icon = Forecast::$weather_status_icons[$i % 3];
-                $tempC = rand(15, 25);
-                $tempF = round($tempC * 9 / 5 + 32, 1);
-                $tempK = $tempC + 273.15;
-                $windKmh = rand(10, 25);
-                $windMs = round($windKmh / 3.6, 1);
+            if ($forecastData && isset($forecastData['forecast']['forecastday'])) {
+                $weather_data_html = '<ul class="weather__list d-flex flex-wrap gap-3">';
+                
+                foreach ($forecastData['forecast']['forecastday'] as $dayData) {
+                    $dateObj = strtotime($dayData['date']);
+                    $date = date('d.m.Y', $dateObj);
+                    $dayName = Forecast::$days[date('N', $dateObj) - 1]; 
 
-                $weather_data_html .= <<<HTML
-                    <li class="weather__item weather__item--mini">
-                        <div class="weather__item-day border-bottom pb-2 mb-3">
-                            <h4 class="mb-1">{$dayName}</h4>
-                            <span class="text-muted">{$date}</span>
-                        </div>
-                        {$icon}
-                        <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F, {$tempK}K</p>
-                        <p class="weather__item-metric"><strong>Вітер:</strong> {$windKmh} км/год, {$windMs} м/с</p>
-                        <p class="weather__item-metric"><strong>Вологість:</strong> 45%</p>
-                        <p class="weather__item-metric"><strong>Індекс забруднення:</strong> 42 AQI (Добре)</p>
-                        <p class="weather__item-metric"><strong>Тиск:</strong> 101325 Pa, 1.01 bars</p>
-                    </li>
-                HTML;
+                    $tempC = round($dayData['day']['avgtemp_c'], 1);
+                    $tempF = round($dayData['day']['avgtemp_f'], 1);
+                    $tempK = round($tempC + 273.15, 1); 
+                    $windKph = round($dayData['day']['maxwind_kph'], 1);
+                    $windMs = round($windKph / 3.6, 1); 
+                    $humidity = $dayData['day']['avghumidity'];
+                    $conditionText = $dayData['day']['condition']['text'];
+                    $iconUrl = $dayData['day']['condition']['icon'];
+
+                    $weather_data_html .= <<<HTML
+                        <li class="weather__item weather__item--mini">
+                            <div class="weather__item-day border-bottom pb-2 mb-3">
+                                <h4 class="mb-1">{$dayName}</h4>
+                                <span class="text-muted">{$date}</span>
+                            </div>
+                            <h5 class="mb-3 text-center">
+                                <img src="{$iconUrl}" alt="icon" style="width: 40px;"> {$conditionText}
+                            </h5>
+                            <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F, {$tempK}K</p>
+                            <p class="weather__item-metric"><strong>Вітер:</strong> {$windKph} км/год, {$windMs} м/с</p>
+                            <p class="weather__item-metric"><strong>Вологість:</strong> {$humidity}%</p>
+                        </li>
+                    HTML;
+                }
+                $weather_data_html .= '</ul>';
+            } else {
+                $weather_data_html = "<p class='text-center text-danger'>Не вдалося завантажити прогноз. Можливо, сервіс тимчасово недоступний.</p>";
             }
-            $weather_data_html .= '</ul>';
 
         } else {
             $heading = "Оберіть Ваше місто, щоб перевірити погоду";
@@ -102,11 +115,13 @@ class WeeklyForecastPage extends BasePage
 
         return $result;
     }
+
     public function get(): void
     {
         $content = $this->get_intro_content() . $this->get_weather_content();
         $this->print_base_page($content);
     }
+
     public function post(): void
     {
         if (isset($_POST['city'])) {

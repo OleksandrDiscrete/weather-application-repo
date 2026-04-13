@@ -2,9 +2,7 @@
 
 include_once "base.php";
 include "forecast.php";
-
-use BasePage;
-use Forecast;
+include "api.php";
 
 class IndexPage extends BasePage
 {
@@ -12,6 +10,7 @@ class IndexPage extends BasePage
     {
         parent::__construct("Weather Master Homepage");
     }
+
     private function get_intro_content(): string
     {
         return <<<'HTML'
@@ -28,33 +27,56 @@ class IndexPage extends BasePage
             </section>
         HTML;
     }
+
     private function get_weather_content(): string
     {
-        $target_city = $_COOKIE["city"];
+        $target_city = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
 
-        if (isset($target_city) && in_array($target_city, Forecast::$cities)) {
-            $date = date('d.m.Y');
-            $dayName = Forecast::$days[date('N') - 1];
+        if ($target_city && in_array($target_city, Forecast::$cities)) {
+            $apiCityName = Forecast::$apiCityMap[$target_city] ?? null;
 
-            $heading = "Сьогодні в місті {$target_city}";
-            $icon = Forecast::$weather_status_icons[0];
+            if ($apiCityName) {
+                $apiClient = new WeatherApiClient("134335a027cf4d58a78231326261304"); 
+                $weatherData = $apiClient->getCurrentWeather($apiCityName);
 
-            $weather_data_html = <<<HTML
-                <ul class="weather__list">
-                    <li class="weather__item">
-                        <div class="weather__item-day border-bottom pb-2 mb-3">
-                            <h4>{$dayName}</h4>
-                            <span class="text-muted">{$date}</span>
-                        </div>
-                        {$icon}
-                        <p class="weather__item-metric"><strong>Температура:</strong> 22°C, 71.6°F, 295.15K</p>
-                        <p class="weather__item-metric"><strong>Вітер:</strong> 15 км/год, 4.1 м/с</p>
-                        <p class="weather__item-metric"><strong>Вологість:</strong> 45%</p>
-                        <p class="weather__item-metric"><strong>Індекс забруднення:</strong> 42 AQI (Добре)</p>
-                        <p class="weather__item-metric"><strong>Тиск:</strong> 1013.25 hPa, 1010 mbars</p>
-                    </li>
-                </ul>
-            HTML;
+                if ($weatherData) {
+                    $tempC = $weatherData['current']['temp_c'];
+                    $tempF = $weatherData['current']['temp_f'];
+                    $windKph = $weatherData['current']['wind_kph'];
+                    $humidity = $weatherData['current']['humidity'];
+                    $pressureMb = $weatherData['current']['pressure_mb'];
+                    $conditionText = $weatherData['current']['condition']['text'];
+                    $iconUrl = $weatherData['current']['condition']['icon'];
+
+                    $date = date('d.m.Y');
+                    $dayName = Forecast::$days[date('N') - 1];
+                    $heading = "Сьогодні в місті {$target_city}";
+
+                    $weather_data_html = <<<HTML
+                        <ul class="weather__list">
+                            <li class="weather__item">
+                                <div class="weather__item-day border-bottom pb-2 mb-3">
+                                    <h4>{$dayName}</h4>
+                                    <span class="text-muted">{$date}</span>
+                                </div>
+                                <h3 class="weather__item-status mb-4">
+                                    <img src="{$iconUrl}" alt="weather icon"> {$conditionText}
+                                </h3>
+                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F</p>
+                                <p class="weather__item-metric"><strong>Вітер:</strong> {$windKph} км/год</p>
+                                <p class="weather__item-metric"><strong>Вологість:</strong> {$humidity}%</p>
+                                <p class="weather__item-metric"><strong>Тиск:</strong> {$pressureMb} mbars</p>
+                            </li>
+                        </ul>
+                    HTML;
+                } else {
+                    $heading = "Помилка";
+                    $weather_data_html = "<p class='text-center text-danger'>Не вдалося отримати дані для міста {$target_city}.</p>";
+                }
+            } else {
+                $heading = "Помилка конфігурації";
+                $weather_data_html = "<p class='text-center text-danger'>Координати для міста {$target_city} не знайдені у словнику.</p>";
+            }
         } else {
             $heading = "Оберіть Ваше місто, щоб перевірити погоду";
             $weather_data_html = <<<HTML
@@ -90,15 +112,17 @@ class IndexPage extends BasePage
 
         return $result;
     }
+
     public function get(): void
     {
         $content = $this->get_intro_content() . $this->get_weather_content();
         $this->print_base_page($content);
     }
+
     public function post(): void
     {
         if (isset($_POST['city'])) {
-            setcookie("city", htmlspecialchars($_POST['city']), time() + Forecast::$COOKIE_LIFETIME, "/");
+            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + Forecast::$COOKIE_LIFETIME, "/");
         }
         header("Location: ./index.php");
     }
