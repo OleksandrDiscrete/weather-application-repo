@@ -9,7 +9,7 @@ class Forecast
         "Рівне", "Івано-Франківськ", "Тернопіль"
     ];
 
-    // АБСОЛЮТНО ТОЧНИЙ СЛОВНИК (GPS КООРДИНАТИ)
+  
     public static $apiCityMap = [
         "Київ" => "50.45,30.52",
         "Львів" => "49.84,24.03",
@@ -33,7 +33,7 @@ class Forecast
         "Івано-Франківськ" => "48.92,24.71",
         "Тернопіль" => "49.55,25.59"
     ];
-    
+
     public static $days = ["Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя"];
     public static $weather_status_icons = [
         '<h3 class="weather__item-status weather__item-status--sunny mb-4"><i class="bi bi-sun-fill"></i> Сонячно</h3>',

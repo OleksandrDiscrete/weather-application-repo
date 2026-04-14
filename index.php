@@ -37,11 +37,19 @@ class IndexPage extends BasePage
 
             if ($apiCityName) {
                 $apiClient = new WeatherApiClient("134335a027cf4d58a78231326261304"); 
+                // ВИПРАВЛЕНО: тепер передаємо координати $apiCityName
                 $weatherData = $apiClient->getCurrentWeather($apiCityName);
 
                 if ($weatherData) {
                     $tempC = $weatherData['current']['temp_c'];
                     $tempF = $weatherData['current']['temp_f'];
+                    $tempK = round($tempC + 273.15, 1);
+
+                    $feelsLikeC = $weatherData['current']['feelslike_c'];
+                    $uvIndex = $weatherData['current']['uv'];
+                    $precipMm = $weatherData['current']['precip_mm'];
+                    $visKm = $weatherData['current']['vis_km'];
+
                     $windKph = $weatherData['current']['wind_kph'];
                     $humidity = $weatherData['current']['humidity'];
                     $pressureMb = $weatherData['current']['pressure_mb'];
@@ -62,9 +70,13 @@ class IndexPage extends BasePage
                                 <h3 class="weather__item-status mb-4">
                                     <img src="{$iconUrl}" alt="weather icon"> {$conditionText}
                                 </h3>
-                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F</p>
+                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F, {$tempK}K</p>
+                                <p class="weather__item-metric"><strong>Відчувається як:</strong> {$feelsLikeC}°C</p>
                                 <p class="weather__item-metric"><strong>Вітер:</strong> {$windKph} км/год</p>
                                 <p class="weather__item-metric"><strong>Вологість:</strong> {$humidity}%</p>
+                                <p class="weather__item-metric"><strong>Опади:</strong> {$precipMm} мм</p>
+                                <p class="weather__item-metric"><strong>УФ-індекс:</strong> {$uvIndex}</p>
+                                <p class="weather__item-metric"><strong>Видимість:</strong> {$visKm} км</p>
                                 <p class="weather__item-metric"><strong>Тиск:</strong> {$pressureMb} mbars</p>
                             </li>
                         </ul>
@@ -75,7 +87,7 @@ class IndexPage extends BasePage
                 }
             } else {
                 $heading = "Помилка конфігурації";
-                $weather_data_html = "<p class='text-center text-danger'>Координати для міста {$target_city} не знайдені у словнику.</p>";
+                $weather_data_html = "<p class='text-center text-danger'>Координати не знайдені.</p>";
             }
         } else {
             $heading = "Оберіть Ваше місто, щоб перевірити погоду";
