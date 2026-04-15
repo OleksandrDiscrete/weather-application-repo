@@ -4,6 +4,10 @@ include_once "base.php";
 include_once "forecast.php";
 include_once "api.php";
 
+use BasePage;
+use Forecast;
+use WeatherApiClient;
+
 class WeeklyForecastPage extends BasePage
 {
     public function __construct()
@@ -35,14 +39,14 @@ class WeeklyForecastPage extends BasePage
         if ($target_city && in_array($target_city, Forecast::$cities)) {
             $heading = "Прогноз на найближчі дні у місті {$target_city}";
             $apiCityName = Forecast::$apiCityMap[$target_city] ?? null;
-            
-            if ($apiCityName) {
-                $apiClient = new WeatherApiClient("134335a027cf4d58a78231326261304"); 
-                $forecastData = $apiClient->getForecast($apiCityName, 5);
 
+            if ($apiCityName) {
+                $apiClient = new WeatherApiClient();
+
+                $forecastData = $apiClient->getForecast($apiCityName, 5);
                 if ($forecastData && isset($forecastData['forecast']['forecastday'])) {
                     $weather_data_html = '<ul class="weather__list d-flex flex-wrap gap-3">';
-                    
+
                     $i = 0;
                     foreach ($forecastData['forecast']['forecastday'] as $dayData) {
                         $dateObj = strtotime($dayData['date']);
@@ -59,35 +63,37 @@ class WeeklyForecastPage extends BasePage
                             $visKm = $forecastData['current']['vis_km'];
                             $conditionText = $forecastData['current']['condition']['text'];
                             $iconUrl = $forecastData['current']['condition']['icon'];
+                            $statusClass = $apiClient->getWeatherStatusClass($forecastData['current']['condition']['code']);
                         } else {
                             $tempC = round($dayData['day']['avgtemp_c'], 1);
                             $tempF = round($dayData['day']['avgtemp_f'], 1);
-                            $windKph = round($dayData['day']['maxwind_kph'], 1);
+                            $windKph = $dayData['day']['maxwind_kph'];
                             $humidity = $dayData['day']['avghumidity'];
                             $uvIndex = $dayData['day']['uv'];
                             $precipMm = $dayData['day']['totalprecip_mm'];
                             $visKm = $dayData['day']['avgvis_km'];
                             $conditionText = $dayData['day']['condition']['text'];
                             $iconUrl = $dayData['day']['condition']['icon'];
+                            $statusClass = $apiClient->getWeatherStatusClass($dayData['day']['condition']['code']);
                         }
 
                         $tempK = round($tempC + 273.15, 1);
                         $windMs = round($windKph / 3.6, 1);
-                        
+
                         $maxTemp = $dayData['day']['maxtemp_c'];
                         $minTemp = $dayData['day']['mintemp_c'];
                         $chanceOfRain = $dayData['day']['daily_chance_of_rain'];
 
                         $weather_data_html .= <<<HTML
-                            <li class="weather__item weather__item--mini" style="flex: 1 1 300px;">
+                            <li class="weather__item weather__item--mini" style="flex: 1 1 18.75rem;">
                                 <div class="weather__item-day border-bottom pb-2 mb-3">
                                     <h4 class="mb-1">{$dayName}</h4>
                                     <span class="text-muted">{$date}</span>
                                 </div>
-                                <h5 class="mb-3 text-center">
-                                    <img src="{$iconUrl}" alt="icon" style="width: 45px;"> {$conditionText}
+                                <h5 class="weather__item-status mb-3 text-center {$statusClass}">
+                                    <img src="{$iconUrl}" alt="icon"> {$conditionText}
                                 </h5>
-                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C ({$minTemp}...{$maxTemp}), {$tempK}K</p>
+                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C ({$minTemp}...{$maxTemp}), {$tempF}°F, {$tempK}K</p>
                                 <p class="weather__item-metric"><strong>Вітер:</strong> {$windKph} км/год ({$windMs} м/с)</p>
                                 <p class="weather__item-metric"><strong>Вологість:</strong> {$humidity}%</p>
                                 <p class="weather__item-metric"><strong>Ймовірність дощу:</strong> {$chanceOfRain}%</p>
@@ -96,7 +102,6 @@ class WeeklyForecastPage extends BasePage
                                 <p class="weather__item-metric"><strong>Видимість:</strong> {$visKm} км</p>
                             </li>
                         HTML;
-                        
                         $i++;
                     }
                     $weather_data_html .= '</ul>';

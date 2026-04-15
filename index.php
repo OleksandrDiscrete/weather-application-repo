@@ -1,8 +1,12 @@
 <?php
 
 include_once "base.php";
-include "forecast.php";
-include "api.php";
+include_once "forecast.php";
+include_once "api.php";
+
+use BasePage;
+use Forecast;
+use WeatherApiClient;
 
 class IndexPage extends BasePage
 {
@@ -36,10 +40,10 @@ class IndexPage extends BasePage
             $apiCityName = Forecast::$apiCityMap[$target_city] ?? null;
 
             if ($apiCityName) {
-                $apiClient = new WeatherApiClient("134335a027cf4d58a78231326261304"); 
+                $apiClient = new WeatherApiClient();
+
                 // ВИПРАВЛЕНО: тепер передаємо координати $apiCityName
                 $weatherData = $apiClient->getCurrentWeather($apiCityName);
-
                 if ($weatherData) {
                     $tempC = $weatherData['current']['temp_c'];
                     $tempF = $weatherData['current']['temp_f'];
@@ -55,6 +59,7 @@ class IndexPage extends BasePage
                     $pressureMb = $weatherData['current']['pressure_mb'];
                     $conditionText = $weatherData['current']['condition']['text'];
                     $iconUrl = $weatherData['current']['condition']['icon'];
+                    $statusClass = $apiClient->getWeatherStatusClass($weatherData['current']['condition']['code']);
 
                     $date = date('d.m.Y');
                     $dayName = Forecast::$days[date('N') - 1];
@@ -67,8 +72,8 @@ class IndexPage extends BasePage
                                     <h4>{$dayName}</h4>
                                     <span class="text-muted">{$date}</span>
                                 </div>
-                                <h3 class="weather__item-status mb-4">
-                                    <img src="{$iconUrl}" alt="weather icon"> {$conditionText}
+                                <h3 class="weather__item-status mb-3 text-center {$statusClass}">
+                                    <img src="{$iconUrl}" alt="icon"> {$conditionText}
                                 </h3>
                                 <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F, {$tempK}K</p>
                                 <p class="weather__item-metric"><strong>Відчувається як:</strong> {$feelsLikeC}°C</p>

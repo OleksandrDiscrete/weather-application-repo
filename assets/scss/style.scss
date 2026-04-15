@@ -15,6 +15,14 @@ $fw-regular: 500;
 $fw-bold: 700;
 $fw-black: 900;
 
+@function light($color, $percentage) {
+  @return mix(#fff, $color, $percentage);
+}
+
+@function dark($color, $percentage) {
+  @return mix(#000000, $color, $percentage);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -30,6 +38,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }
 
 h1,
@@ -55,8 +67,8 @@ h6 {
     &:focus,
     &:active,
     &.active {
-      background-color: darken($primary, 10%);
-      border-color: darken($primary, 12%);
+      background-color: dark($primary, 5%);
+      border-color: light($primary, 40%);
       color: $light;
     }
   }
@@ -83,8 +95,8 @@ h6 {
     &:focus,
     &:active,
     &.active {
-      background-color: darken($secondary, 10%);
-      border-color: darken($secondary, 12%);
+      background-color: dark($secondary, 10%);
+      border-color: light($secondary, 40%);
       color: $light;
     }
   }
@@ -119,7 +131,7 @@ h6 {
 }
 
 .intro {
-  background: linear-gradient(135deg, $secondary, darken($secondary, 15%));
+  background: linear-gradient(135deg, $secondary, dark($secondary, 20%));
   color: $light;
   border-radius: 0 0 20px 20px;
   margin-bottom: 2rem;
@@ -164,7 +176,7 @@ h6 {
     }
 
     &--mini {
-      max-width: 400px;
+      max-width: 420px;
     }
 
     &-day {
@@ -177,14 +189,14 @@ h6 {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       color: $text-dark;
 
       &--sunny {
         color: $sunny-color;
       }
       &--grey {
-        color: $text-muted;
+        color: dark($text-muted, 24%);
       }
     }
 
@@ -210,7 +222,7 @@ h6 {
 }
 
 .footer {
-  background: darken($secondary, 10%);
+  background: dark($secondary, 16%);
   color: $light;
   border-radius: 20px 20px 0 0;
 
