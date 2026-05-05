@@ -9,8 +9,8 @@ use Database;
  */
 abstract class BaseRepository
 {
-    protected $db;
-    protected $pdo;
+    protected Database $db;
+    protected ?PDO $pdo;
 
     public function __construct(Database $db)
     {
@@ -24,4 +24,5 @@ abstract class BaseRepository
      */
     public abstract function add($item): bool;
     public abstract function remove(int $id): bool;
+    public abstract function seed(): void;
 }

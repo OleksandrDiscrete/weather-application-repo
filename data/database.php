@@ -2,9 +2,9 @@
 
 class Database
 {
-    private $pdo = null;
+    private ?PDO $pdo = null;
 
-    public function __construct(private string $db_file_path = __DIR__ . '/weather.sqlite') {}
+    public function __construct(private string $db_file_path = __DIR__ . '/main.db') {}
     public function __destruct() 
     {
         $this->disconnect();

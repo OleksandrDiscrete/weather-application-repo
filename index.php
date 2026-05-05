@@ -4,10 +4,6 @@ include_once "base.php";
 include_once "forecast.php";
 include_once "api.php";
 
-use BasePage;
-use Forecast;
-use WeatherApiClient;
-
 class IndexPage extends BasePage
 {
     public function __construct()

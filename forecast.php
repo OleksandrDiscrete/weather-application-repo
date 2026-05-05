@@ -1,6 +1,7 @@
 <?php
 class Forecast
 {
+    //Remove hardcoded cities
     public static $cities = [
         "Київ",
         "Львів",

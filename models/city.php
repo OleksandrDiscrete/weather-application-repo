@@ -9,5 +9,5 @@ class City
         public float $position_y = 0
     ) {}
 
-    public const string TABLE_NAME = "city";
+    public const TABLE_NAME = "city";
 }

@@ -1,12 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
-$primary: #8d21f1;
+$primary: #a247f8;
 $secondary: #0d6efd;
 $bg-light: #f4f7f6;
 $light: #fefefe;
 $text-dark: #2c3e50;
 $text-muted: #7f8c8d;
 $sunny-color: #f1c40f;
+$danger: #e72c17;
 
 $font-heading: "Montserrat Alternates", sans-serif;
 $font-body: "Inter", sans-serif;
@@ -22,6 +23,8 @@ $fw-black: 900;
 @function dark($color, $percentage) {
   @return mix(#000000, $color, $percentage);
 }
+
+@import "./auth.scss";
 
 html {
   scroll-behavior: smooth;
@@ -54,9 +57,16 @@ h6 {
   font-weight: $fw-black;
 }
 
+.text-content {
+  max-width: 840px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 .btn {
   padding: 0.75rem 1.5rem;
   border-radius: 1rem;
+  font-weight: $fw-bold;
 
   &-primary {
     background-color: $primary;
@@ -115,7 +125,28 @@ h6 {
     }
   }
 }
+.form {
+  &-label {
+    font-weight: $fw-bold;
+    color: $text-dark;
+    font-size: 1rem;
+  }
+  &-control {
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid rgba($text-muted, 0.3);
+    background-color: $bg-light;
+    color: $text-dark;
+    transition: all 0.3s ease-in-out;
 
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 0.25rem rgba($primary, 0.2);
+      background-color: $light;
+      outline: none;
+    }
+  }
+}
 .header {
   position: sticky;
   top: 0;
@@ -126,6 +157,16 @@ h6 {
     &-text {
       font-family: $font-heading;
       font-weight: $fw-bold;
+    }
+  }
+  .nav-link {
+    &.active {
+      color: $light;
+      background-color: $primary !important;
+    }
+    &.active-danger {
+      color: $light;
+      background-color: $danger !important;
     }
   }
 }
@@ -144,6 +185,7 @@ h6 {
     margin: 0 auto;
 
     .form-control {
+      background-color: $light;
       border-radius: 30px 0 0 30px;
       padding: 0.75rem 1.5rem;
     }
@@ -163,7 +205,7 @@ h6 {
 
   &__item {
     background-color: $light;
-    border-radius: 15px;
+    border-radius: 16px;
     padding: 2rem;
     width: 100%;
     max-width: 480px;
