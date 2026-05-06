@@ -50,10 +50,7 @@ class WeatherApiClient
         return json_decode($response, true);
     }
 
-    /**
-     * @param int $weather_code
-     */
-    public function getWeatherStatusClass($weather_code): string
+    public function getWeatherStatusClass(int $weather_code): string
     {
         $className = "weather__item-status";
         switch ($weather_code) {

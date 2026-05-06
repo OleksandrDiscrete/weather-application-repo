@@ -3,9 +3,6 @@
 include_once "baseRepository.php";
 include_once "../models/adminUser.php";
 
-use BaseRepository;
-use AdminUser;
-
 /**
  * @extends BaseRepository<AdminUser>
  */
@@ -17,7 +14,7 @@ class AdminUserRepository extends BaseRepository
         parent::__construct($db);
     }
 
-    public function init_table(): void
+    public function initTable(): void
     {
         try {
             $sql = "CREATE TABLE IF NOT EXISTS " . AdminUser::TABLE_NAME . " (
@@ -46,7 +43,7 @@ class AdminUserRepository extends BaseRepository
                 "(login, password_hash, email) VALUES (:login, :password_hash, :email)");
 
             $stmt->bindParam(':login', $item->login);
-            $stmt->bindParam(':password_hash', $item->password_hash);
+            $stmt->bindParam(':password_hash', $item->passwordHash);
             $stmt->bindParam(':email', $item->email);
 
             return $stmt->execute();
@@ -82,7 +79,7 @@ class AdminUserRepository extends BaseRepository
                 $admin = new AdminUser();
                 $admin->login = "admin";
                 $admin->email = "admin@weathermaster.ua";
-                $admin->password_hash = password_hash("SuperSecretPassword123!", PASSWORD_DEFAULT);
+                $admin->passwordHash = password_hash("SuperSecretPassword123!", PASSWORD_DEFAULT);
 
                 $success = $this->add($admin);
                 if ($success) {

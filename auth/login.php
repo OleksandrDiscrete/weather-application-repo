@@ -13,13 +13,13 @@ class LoginPage extends BasePage
         parent::__construct("Weather Master Login");
     }
 
-    private function get_content(): string
+    private function getContent(): string
     {
         $errorHtml = '';
         if ($this->error) {
             $errorHtml = '<div class="alert alert-danger">' . htmlspecialchars($this->error) . '</div>';
         }
-        $actionPath = PathHelper::get_absolute_path("auth/login.php");
+        $actionPath = PathHelper::getAbsolutePath("auth/login.php");
         return <<<HTML
     <section class="auth py-5">
         <div class="container">
@@ -52,8 +52,8 @@ class LoginPage extends BasePage
             header("Location: admin.php");
             exit();
         }
-        $content = $this->get_content();
-        $this->print_base_page($content);
+        $content = $this->getContent();
+        $this->printBasePage($content);
     }
 
     public function post(): void
@@ -66,11 +66,11 @@ class LoginPage extends BasePage
 
         $user = $adminRepository->findByLogin($login);
 
-        if ($user && password_verify($password, $user->password_hash)) {
+        if ($user && password_verify($password, $user->passwordHash)) {
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_login'] = $user->login;
 
-            header("Location: " . PathHelper::get_absolute_path("index.php"));
+            header("Location: " . PathHelper::getAbsolutePath("index.php"));
             exit();
         } else {
             $this->error = "Невірний логін або пароль!";

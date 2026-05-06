@@ -2,8 +2,6 @@
 
 include_once "../data/database.php";
 
-use Database;
-
 /**
  * @template T
  */
@@ -18,7 +16,7 @@ abstract class BaseRepository
         $this->pdo = $this->db->connect();
     }
 
-    public abstract function init_table(): void;
+    public abstract function initTable(): void;
     /**
      * @param T $item
      */

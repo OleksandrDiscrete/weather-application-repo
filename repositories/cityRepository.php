@@ -13,7 +13,7 @@ class CityRepository extends BaseRepository
         parent::__construct($db);
     }
 
-    public function init_table(): void
+    public function initTable(): void
     {
         try {
             $sql = "CREATE TABLE IF NOT EXISTS " . City::TABLE_NAME . " (
@@ -42,8 +42,8 @@ class CityRepository extends BaseRepository
                 "(name, position_x, position_y) VALUES (:name, :position_x, :position_y)");
 
             $stmt->bindParam(':name', $item->name);
-            $stmt->bindParam(':position_x', $item->position_x);
-            $stmt->bindParam(':position_y', $item->position_y);
+            $stmt->bindParam(':position_x', $item->positionX);
+            $stmt->bindParam(':position_y', $item->positionY);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -105,8 +105,8 @@ class CityRepository extends BaseRepository
                     if (count($coords) === 2) {
                         $city = new City();
                         $city->name = $cityName;
-                        $city->position_x = (float) $coords[0];
-                        $city->position_y = (float) $coords[1];
+                        $city->positionX = (float) $coords[0];
+                        $city->positionY = (float) $coords[1];
                         $this->add($city);
                     }
                 }

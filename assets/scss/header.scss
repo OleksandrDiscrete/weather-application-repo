@@ -1,0 +1,48 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: $light;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+
+  &__wrap {
+    @include flex-row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  &__logo {
+    @include flex-row;
+    column-gap: 0.5rem;
+    align-items: center;
+
+    &-icon {
+      font-size: 2.5rem;
+      color: $primary;
+    }
+    &-text {
+      color: $primary;
+      font-family: $font-heading;
+      font-weight: $fw-black;
+    }
+  }
+  .nav-link {
+    &.active {
+      color: $light;
+      background-color: $primary !important;
+    }
+    &.active-danger {
+      color: $light;
+      background-color: $danger !important;
+    }
+  }
+}
+
+@media screen and (max-width: 61.25rem) {
+  .header {
+    &__wrap {
+      @include flex-column;
+      justify-content: center;
+      row-gap: 1rem;
+    }
+  }
+}

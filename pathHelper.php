@@ -1,13 +1,15 @@
 <?php
 class PathHelper
 {
-    public static string $APPLICATION_PATH = "http://localhost/weather-application-repo/";
-    public static function get_base_path(): string
+    public static string $applicationPath = "http://localhost/weather-application-repo/";
+
+    public static function getBasePath(): string
     {
-        return self::$APPLICATION_PATH;
+        return self::$applicationPath;
     }
-    public static function get_absolute_path(string $relative_path): string
+
+    public static function getAbsolutePath(string $relativePath): string
     {
-        return self::get_base_path() . $relative_path;
+        return self::getBasePath() . $relativePath;
     }
 }

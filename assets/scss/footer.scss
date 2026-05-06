@@ -1,0 +1,42 @@
+.footer {
+  background: dark($secondary, 16%);
+  color: $light;
+  border-radius: 20px 20px 0 0;
+
+  .nav-link {
+    color: rgba($light, 0.8) !important;
+    font-weight: $fw-regular;
+    transition: color 0.3s ease;
+
+    &:hover,
+    &:focus {
+      color: $light !important;
+    }
+  }
+
+  .border-bottom {
+    border-color: rgba($light, 0.2) !important;
+  }
+
+  &__copyright {
+    color: rgba($light, 0.85) !important;
+    font-size: 1.25rem;
+    font-weight: $fw-bold;
+    margin-bottom: 0;
+    padding-top: 1rem;
+  }
+  &__social {
+    &-link {
+      color: rgba($light, 0.9);
+      transition: all 0.3s ease;
+      display: inline-block;
+      font-size: 2rem;
+
+      &:hover,
+      &:focus {
+        color: $light;
+        transform: scale(1.2);
+      }
+    }
+  }
+}

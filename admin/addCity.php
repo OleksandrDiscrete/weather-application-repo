@@ -14,7 +14,7 @@ class AddCityPage extends AuthBase
         parent::__construct("Weather Master Add City");
     }
 
-    private function get_content(): string
+    private function getContent(): string
     {
         $errorHtml = '';
         if ($this->error) {
@@ -26,7 +26,7 @@ class AddCityPage extends AuthBase
         }
 
         $adminName = isset($_SESSION['admin_login']) ? htmlspecialchars($_SESSION['admin_login']) : '';
-        $actionPath = PathHelper::get_absolute_path("admin/addCity.php");
+        $actionPath = PathHelper::getAbsolutePath("admin/addCity.php");
 
         return <<<HTML
     <section class="admin py-5">
@@ -48,13 +48,13 @@ class AddCityPage extends AuthBase
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="position_x" class="form-label">Широта (Latitude)*</label>
-                        <input type="number" step="0.0001" class="form-control" id="position_x" name="position_x" min="-90" max="90" value="0"
+                        <label for="positionX" class="form-label">Широта (Latitude)*</label>
+                        <input type="number" step="0.0001" class="form-control" id="positionX" name="positionX" min="-90" max="90" value="0"
                             required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="position_y" class="form-label">Довгота (Longitude )*</label>
-                        <input type="number" step="0.0001" class="form-control" id="position_y" name="position_y" min="-180" max="180" value="0"
+                        <label for="positionY" class="form-label">Довгота (Longitude )*</label>
+                        <input type="number" step="0.0001" class="form-control" id="positionY" name="positionY" min="-180" max="180" value="0"
                             required>
                     </div>
                 </div>
@@ -70,13 +70,13 @@ class AddCityPage extends AuthBase
 
     public function get(): void
     {
-        $content = $this->get_content();
-        $this->print_base_page($content);
+        $content = $this->getContent();
+        $this->printBasePage($content);
     }
 
     public function post(): void
     {
-        $city = new City(htmlspecialchars($_POST['name'] ?? ''), (float) ($_POST['position_x'] ?? 0), (float) ($_POST['position_y'] ?? 0));
+        $city = new City(htmlspecialchars($_POST['name'] ?? ''), (float) ($_POST['positionX'] ?? 0), (float) ($_POST['positionY'] ?? 0));
 
         $db = new Database();
         $cityRepo = new CityRepository($db);

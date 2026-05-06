@@ -6,11 +6,11 @@ include_once "../repositories/cityRepository.php";
 $database = new Database();
 
 $cityRepo = new CityRepository($database);
-$cityRepo->init_table();
+$cityRepo->initTable();
 $cityRepo->seed();
 
 $adminUserRepo = new AdminUserRepository($database);
-$adminUserRepo->init_table();
+$adminUserRepo->initTable();
 $adminUserRepo->seed();
 
 echo "Successfully initialized the database and seeded the tables.";
