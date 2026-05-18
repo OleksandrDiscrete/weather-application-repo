@@ -11,24 +11,44 @@ class CityRepository extends BaseRepository
     public function __construct(Database $db)
     {
         parent::__construct($db);
+
+        try {
+            if (!$this->pdo->inTransaction()) {
+                $this->pdo->beginTransaction();
+            }
+
+            $this->initTable();
+            $this->seed();
+
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+        } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            
+            $code = $this->pdo->errorCode();
+            $info = $this->pdo->errorInfo();
+            $msg = $info[2] ?? $e->getMessage();
+            
+            die("<h2 style='color:red;'>Помилка бази даних! Неможливо створити або заповнити таблиці.</h2>
+                 <p><strong>Код помилки PDO:</strong> {$code}</p>
+                 <p><strong>Деталі (errorInfo):</strong> {$msg}</p>");
+        }
     }
 
     public function initTable(): void
     {
-        try {
-            $sql = "CREATE TABLE IF NOT EXISTS " . City::TABLE_NAME . " (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE,
-                    position_x REAL NOT NULL,
-                    position_y REAL NOT NULL,
-                    added_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            ";
+        $sql = "CREATE TABLE IF NOT EXISTS " . City::TABLE_NAME . " (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                position_x REAL NOT NULL,
+                position_y REAL NOT NULL,
+                added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )";
 
-            $this->pdo->exec($sql);
-        } catch (PDOException $e) {
-            echo "Error creating table: " . $e->getMessage();
-        }
+        $this->pdo->exec($sql);
     }
 
     /**
@@ -104,33 +124,21 @@ class CityRepository extends BaseRepository
             "Тернопіль" => "49.55,25.59"
         ];
 
-        try {
-            $stmt = $this->pdo->query("SELECT COUNT(*) FROM " . City::TABLE_NAME);
-            $count = $stmt->fetchColumn();
+        $stmt = $this->pdo->query("SELECT COUNT(*) FROM " . City::TABLE_NAME);
+        $count = $stmt->fetchColumn();
 
-            if ($count == 0) {
-                $this->pdo->beginTransaction();
+        if ($count == 0) {
+            foreach ($apiCityMap as $cityName => $coordinates) {
+                $coords = explode(",", $coordinates);
 
-                foreach ($apiCityMap as $cityName => $coordinates) {
-                    $coords = explode(",", $coordinates);
-
-                    if (count($coords) === 2) {
-                        $city = new City();
-                        $city->name = $cityName;
-                        $city->positionX = (float) $coords[0];
-                        $city->positionY = (float) $coords[1];
-                        $this->add($city);
-                    }
+                if (count($coords) === 2) {
+                    $city = new City();
+                    $city->name = $cityName;
+                    $city->positionX = (float) $coords[0];
+                    $city->positionY = (float) $coords[1];
+                    $this->add($city);
                 }
-
-                $this->pdo->commit();
-                echo "City seed successful: Default cities imported.\n";
             }
-        } catch (PDOException $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-            die("Error seeding cities: " . $e->getMessage());
         }
     }
 }
