@@ -53,6 +53,7 @@ class CityRepository extends BaseRepository
             die("Error inserting data: " . $e->getMessage());
         }
     }
+
     public function remove(int $id): bool
     {
         try {
@@ -63,6 +64,17 @@ class CityRepository extends BaseRepository
             die("Error deleting data: " . $e->getMessage());
         }
     }
+
+    public function getAll(): array
+    {
+        try {
+            $stmt = $this->pdo->query("SELECT * FROM " . City::TABLE_NAME . " ORDER BY name ASC");
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die("Error fetching data: " . $e->getMessage());
+        }
+    }
+
     /**
      * Seeds the database with default cities and their coordinates.
      */
