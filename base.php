@@ -96,6 +96,8 @@ HTML;
     public function printBasePage($content): void
     {
         $stylePath = PathHelper::getAbsolutePath("assets/css/style.css");
+        $faviconPath = PathHelper::getAbsolutePath("assets/favicon/");
+
         echo <<<HTML
             <!doctype html>
             <html lang="en">
@@ -106,6 +108,10 @@ HTML;
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
                 <link rel="stylesheet" href="$stylePath">   
+                <link rel="apple-touch-icon" sizes="180x180" href="$faviconPath/apple-touch-icon.png">
+                <link rel="icon" type="image/png" sizes="32x32" href="$faviconPath/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="$faviconPath/favicon-16x16.png">
+                <link rel="manifest" href="$faviconPath/site.webmanifest">
             </head>
             <body>
                 <div class="wrapper">
