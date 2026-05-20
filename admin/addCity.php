@@ -76,7 +76,11 @@ class AddCityPage extends AuthBase
 
     public function post(): void
     {
-        $city = new City(htmlspecialchars($_POST['name'] ?? ''), (float) ($_POST['positionX'] ?? 0), (float) ($_POST['positionY'] ?? 0));
+        $city = new City(
+            name: htmlspecialchars(trim($_POST['name'] ?? '')), 
+            positionX: (float) ($_POST['positionX'] ?? 0), 
+            positionY: (float) ($_POST['positionY'] ?? 0)
+        );
 
         $db = new Database();
         $cityRepo = new CityRepository($db);
