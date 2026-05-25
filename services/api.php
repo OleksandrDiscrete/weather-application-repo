@@ -1,4 +1,5 @@
 <?php
+namespace WeatherMaster\Services;
 class WeatherApiClient
 {
     private $apiKey;
@@ -12,6 +13,8 @@ class WeatherApiClient
     public function getCurrentWeather($query)
     {
         $url = "{$this->baseUrl}/current.json?key={$this->apiKey}&q={$query}&aqi=no&lang=uk";
+
+        echo $url;
 
         $ch = curl_init();
 

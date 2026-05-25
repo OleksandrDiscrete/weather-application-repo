@@ -1,5 +1,10 @@
 <?php
+namespace WeatherMaster;
+
 include_once "base.php";
+include_once "helpers/pathHelper.php";
+
+use WeatherMaster\Helpers\PathHelper;
 
 abstract class AuthBase extends BasePage
 {

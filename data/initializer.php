@@ -1,7 +1,12 @@
 <?php
+namespace WeatherMaster\Data;
+
 include_once "database.php";
 include_once "../repositories/adminUserRepository.php";
 include_once "../repositories/cityRepository.php";
+
+use WeatherMaster\Repositories\AdminUserRepository;
+use WeatherMaster\Repositories\CityRepository;
 
 $database = new Database();
 

@@ -1,5 +1,8 @@
 <?php
+namespace WeatherMaster\Data;
 
+use PDO;
+use PDOException;
 class Database
 {
     private ?PDO $pdo = null;

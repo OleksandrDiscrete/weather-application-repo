@@ -1,9 +1,17 @@
 <?php
+namespace WeatherMaster;
 
 include_once "base.php";
-include_once "./services/api.php";
-include_once "forecast.php";
-include_once "pathHelper.php";
+include_once "services/api.php";
+include_once "helpers/forecastHelper.php";
+include_once "helpers/pathHelper.php";
+include_once "repositories/cityRepository.php";
+
+use WeatherMaster\Data\Database;
+use WeatherMaster\Helpers\ForecastHelper;
+use WeatherMaster\Helpers\PathHelper;
+use WeatherMaster\Services\WeatherApiClient;
+use WeatherMaster\Repositories\CityRepository;
 
 class WeeklyForecastPage extends BasePage
 {
@@ -31,7 +39,7 @@ class WeeklyForecastPage extends BasePage
 
     private function getWeatherContent(): string
     {
-        $targetCity = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
+        $targetCityName = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
 
         $heading = "Оберіть Ваше місто, щоб перевірити погоду";
         $weatherDataHtml = <<<HTML
@@ -40,65 +48,68 @@ class WeeklyForecastPage extends BasePage
                 </p>
             HTML;
 
-        if (!$targetCity) {
+        if (!$targetCityName) {
             return $this->getWeatherSection($heading, $weatherDataHtml);
         }
-        if (!in_array($targetCity, Forecast::$cities)) {
+
+        $database = new Database();
+        $cityRepository = new CityRepository($database);
+        $city = $cityRepository->getByName($targetCityName);
+
+        if (!$city) {
             $weatherDataHtml = <<<HTML
                 <p class="text-center text-danger mt-4 fs-5">
-                    Дані про погоду у місті {$targetCity} відсутні, оберіть найближчий пункт до вашого місця перебування
+                    Дані про погоду у місті {$targetCityName} відсутні, оберіть найближчий пункт до вашого місця перебування
                 </p>
             HTML;
             return $this->getWeatherSection($heading, $weatherDataHtml);
         }
 
-        $heading = "Прогноз на найближчі дні у місті {$targetCity}";
-        $apiCityName = Forecast::$apiCityMap[$targetCity] ?? null;
-        if ($apiCityName) {
-            $apiClient = new WeatherApiClient();
+        $heading = "Прогноз на найближчі дні у місті {$targetCityName}";
 
-            $forecastData = $apiClient->getForecast($apiCityName, 5);
-            if ($forecastData && isset($forecastData['forecast']['forecastday'])) {
-                $weatherDataHtml = '<ul class="weather__list d-flex flex-wrap gap-3">';
+        $apiClient = new WeatherApiClient();
+        $forecastData = $apiClient->getForecast("$city->positionX,$city->positionY", 5);
+        if ($forecastData && isset($forecastData['forecast']['forecastday'])) {
+            $weatherDataHtml = '<ul class="weather__list d-flex flex-wrap gap-3">';
 
-                $i = 0;
-                foreach ($forecastData['forecast']['forecastday'] as $dayData) {
-                    $dateObj = strtotime($dayData['date']);
-                    $date = date('d.m.Y', $dateObj);
-                    $dayName = Forecast::$days[date('N', $dateObj) - 1];
+            $i = 0;
+            foreach ($forecastData['forecast']['forecastday'] as $dayData) {
+                $dateObj = strtotime($dayData['date']);
+                $date = date('d.m.Y', $dateObj);
+                $dayName = ForecastHelper::$days[date('N', $dateObj) - 1];
 
-                    if ($i === 0) {
-                        $tempC = $forecastData['current']['temp_c'];
-                        $tempF = $forecastData['current']['temp_f'];
-                        $windKph = $forecastData['current']['wind_kph'];
-                        $humidity = $forecastData['current']['humidity'];
-                        $uvIndex = $forecastData['current']['uv'];
-                        $precipMm = $forecastData['current']['precip_mm'];
-                        $visKm = $forecastData['current']['vis_km'];
-                        $conditionText = $forecastData['current']['condition']['text'];
-                        $iconUrl = $forecastData['current']['condition']['icon'];
-                        $statusClass = $apiClient->getWeatherStatusClass($forecastData['current']['condition']['code']);
-                    } else {
-                        $tempC = round($dayData['day']['avgtemp_c'], 1);
-                        $tempF = round($dayData['day']['avgtemp_f'], 1);
-                        $windKph = $dayData['day']['maxwind_kph'];
-                        $humidity = $dayData['day']['avghumidity'];
-                        $uvIndex = $dayData['day']['uv'];
-                        $precipMm = $dayData['day']['totalprecip_mm'];
-                        $visKm = $dayData['day']['avgvis_km'];
-                        $conditionText = $dayData['day']['condition']['text'];
-                        $iconUrl = $dayData['day']['condition']['icon'];
-                        $statusClass = $apiClient->getWeatherStatusClass($dayData['day']['condition']['code']);
-                    }
+                if ($i === 0) {
+                    $tempC = $forecastData['current']['temp_c'];
+                    $tempF = $forecastData['current']['temp_f'];
+                    $windKph = $forecastData['current']['wind_kph'];
+                    $humidity = $forecastData['current']['humidity'];
+                    $uvIndex = $forecastData['current']['uv'];
+                    $precipMm = $forecastData['current']['precip_mm'];
+                    $visKm = $forecastData['current']['vis_km'];
+                    $conditionText = $forecastData['current']['condition']['text'];
+                    $iconUrl = $forecastData['current']['condition']['icon'];
+                    $statusClass = $apiClient->getWeatherStatusClass($forecastData['current']['condition']['code']);
+                } else {
+                    $tempC = round($dayData['day']['avgtemp_c'], 1);
+                    $tempF = round($dayData['day']['avgtemp_f'], 1);
+                    $windKph = $dayData['day']['maxwind_kph'];
+                    $humidity = $dayData['day']['avghumidity'];
+                    $uvIndex = $dayData['day']['uv'];
+                    $precipMm = $dayData['day']['totalprecip_mm'];
+                    $visKm = $dayData['day']['avgvis_km'];
+                    $conditionText = $dayData['day']['condition']['text'];
+                    $iconUrl = $dayData['day']['condition']['icon'];
+                    $statusClass = $apiClient->getWeatherStatusClass($dayData['day']['condition']['code']);
+                }
 
-                    $tempK = round($tempC + 273.15, 1);
-                    $windMs = round($windKph / 3.6, 1);
+                $tempK = round($tempC + 273.15, 1);
+                $windMs = round($windKph / 3.6, 1);
 
-                    $maxTemp = $dayData['day']['maxtemp_c'];
-                    $minTemp = $dayData['day']['mintemp_c'];
-                    $chanceOfRain = $dayData['day']['daily_chance_of_rain'];
+                $maxTemp = $dayData['day']['maxtemp_c'];
+                $minTemp = $dayData['day']['mintemp_c'];
+                $chanceOfRain = $dayData['day']['daily_chance_of_rain'];
 
-                    $weatherDataHtml .= <<<HTML
+                $weatherDataHtml .= <<<HTML
                             <li class="weather__item weather__item--mini" style="flex: 1 1 18.75rem;">
                                 <div class="weather__item-day border-bottom pb-2 mb-3">
                                     <h4 class="mb-1">{$dayName}</h4>
@@ -116,15 +127,11 @@ class WeeklyForecastPage extends BasePage
                                 <p class="weather__item-metric"><strong>Видимість:</strong> {$visKm} км</p>
                             </li>
                         HTML;
-                    $i++;
-                }
-                $weatherDataHtml .= '</ul>';
-            } else {
-                $weatherDataHtml = "<p class='text-center text-danger'>Не вдалося завантажити прогноз.</p>";
+                $i++;
             }
+            $weatherDataHtml .= '</ul>';
         } else {
-            $heading = "Помилка конфігурації";
-            $weatherDataHtml = "<p class='text-center text-danger'>Координати не знайдені.</p>";
+            $weatherDataHtml = "<p class='text-center text-danger'>Не вдалося завантажити прогноз.</p>";
         }
 
         return $this->getWeatherSection($heading, $weatherDataHtml);
@@ -133,6 +140,10 @@ class WeeklyForecastPage extends BasePage
     private function getWeatherSection(string $heading, string $weatherDataHtml): string
     {
         $imagePath = PathHelper::getAbsolutePath("assets/images/search-icon.png");
+
+        $database = new Database();
+        $cityRepository = new CityRepository($database);
+        $cities = $cityRepository->getAll();
 
         $result = <<<HTML
         <section class="weather py-5" id="weather">
@@ -150,7 +161,7 @@ class WeeklyForecastPage extends BasePage
                             <datalist id="cities">
         HTML;
 
-        $result .= implode("", array_map(fn($value): string => "<option value=\"{$value}\" />", Forecast::$cities));
+        $result .= implode("", array_map(fn($value): string => "<option value=\"{$value}\" />", array_column($cities, 'name')));
 
         $result .= <<<HTML
                                 </datalist>
@@ -173,7 +184,7 @@ class WeeklyForecastPage extends BasePage
     public function post(): void
     {
         if (isset($_POST['city'])) {
-            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + Forecast::$COOKIE_LIFETIME, "/");
+            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + ForecastHelper::$COOKIE_LIFETIME, "/");
         }
         header("Location: ./weeklyForecast.php");
     }

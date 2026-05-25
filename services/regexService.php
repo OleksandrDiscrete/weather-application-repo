@@ -1,8 +1,7 @@
 <?php
-
+namespace WeatherMaster\Services;
 class RegexService
 {
-
     public static function validateEmail(string $email): bool
     {
         return (bool) preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email);
@@ -44,16 +43,16 @@ class RegexService
     {
         $pattern = '/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/';
         if (preg_match($pattern, $coord1, $m1) && preg_match($pattern, $coord2, $m2)) {
-            $lat1 = deg2rad((float)$m1[1]); 
-            $lon1 = deg2rad((float)$m1[3]);
-            $lat2 = deg2rad((float)$m2[1]); 
-            $lon2 = deg2rad((float)$m2[3]);
-            
-            $dLat = $lat2 - $lat1; 
+            $lat1 = deg2rad((float) $m1[1]);
+            $lon1 = deg2rad((float) $m1[3]);
+            $lat2 = deg2rad((float) $m2[1]);
+            $lon2 = deg2rad((float) $m2[3]);
+
+            $dLat = $lat2 - $lat1;
             $dLon = $lon2 - $lon1;
-            
-            $a = sin($dLat/2)**2 + cos($lat1) * cos($lat2) * sin($dLon/2)**2;
-            return round(6371 * 2 * atan2(sqrt($a), sqrt(1-$a)), 2); // Радіус Землі 6371 км
+
+            $a = sin($dLat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dLon / 2) ** 2;
+            return round(6371 * 2 * atan2(sqrt($a), sqrt(1 - $a)), 2); // Радіус Землі 6371 км
         }
         return null;
     }

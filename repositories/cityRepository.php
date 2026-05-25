@@ -1,7 +1,14 @@
 <?php
+namespace WeatherMaster\Repositories;
 
 include_once "baseRepository.php";
-include_once "../models/city.php";
+include_once __DIR__ . "/../models/city.php";
+include_once __DIR__ . "/../data/database.php";
+
+use PDO;
+use PDOException;
+use WeatherMaster\Models\City;
+use WeatherMaster\Data\Database;
 
 /**
  * @extends BaseRepository<City>
@@ -27,11 +34,11 @@ class CityRepository extends BaseRepository
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
-            
+
             $code = $this->pdo->errorCode();
             $info = $this->pdo->errorInfo();
             $msg = $info[2] ?? $e->getMessage();
-            
+
             die("<h2 style='color:red;'>Помилка бази даних! Неможливо створити або заповнити таблиці.</h2>
                  <p><strong>Код помилки PDO:</strong> {$code}</p>
                  <p><strong>Деталі (errorInfo):</strong> {$msg}</p>");
@@ -90,6 +97,24 @@ class CityRepository extends BaseRepository
         try {
             $stmt = $this->pdo->query("SELECT * FROM " . City::TABLE_NAME . " ORDER BY name ASC");
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die("Error fetching data: " . $e->getMessage());
+        }
+    }
+
+    public function getByName(string $name): ?City
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM " . City::TABLE_NAME . " WHERE name = :name LIMIT 1");
+            $stmt->bindParam(':name', $name);
+            $stmt->execute();
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($data) {
+                $city = new City($data['id'], $data['name'], $data['position_x'], $data['position_y']);
+                return $city;
+            }
+            return null;
         } catch (PDOException $e) {
             die("Error fetching data: " . $e->getMessage());
         }

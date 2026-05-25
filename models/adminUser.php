@@ -1,4 +1,5 @@
 <?php
+namespace WeatherMaster\Models;
 class AdminUser
 {
     public function __construct(

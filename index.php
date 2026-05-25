@@ -1,9 +1,22 @@
 <?php
+namespace WeatherMaster;
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 include_once "base.php";
-include_once "./services/api.php";
-include_once "forecast.php";
-include_once "pathHelper.php";
+include_once "services/api.php";
+include_once "helpers/forecastHelper.php";
+include_once "helpers/pathHelper.php";
+include_once "repositories/cityRepository.php";
+include_once "data/database.php";
+
+use WeatherMaster\Data\Database;
+use WeatherMaster\Helpers\ForecastHelper;
+use WeatherMaster\Helpers\PathHelper;
+use WeatherMaster\Services\WeatherApiClient;
+use WeatherMaster\Repositories\CityRepository;
 
 class IndexPage extends BasePage
 {
@@ -51,7 +64,7 @@ class IndexPage extends BasePage
         $statusClass = $weatherStatusClass;
 
         $date = date('d.m.Y');
-        $dayName = Forecast::$days[date('N') - 1];
+        $dayName = ForecastHelper::$days[date('N') - 1];
 
         return <<<HTML
             <li class="weather__item">
@@ -76,7 +89,7 @@ class IndexPage extends BasePage
 
     private function getWeatherContent(): string
     {
-        $targetCity = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
+        $targetCityName = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
         $heading = "Оберіть Ваше місто, щоб перевірити погоду";
         $weatherDataHtml = <<<HTML
                 <p class="text-center text-muted mt-4 fs-5">
@@ -84,46 +97,49 @@ class IndexPage extends BasePage
                 </p>
             HTML;
 
-        if (!$targetCity) {
+        if (!$targetCityName) {
             return $this->getWeatherSection($heading, $weatherDataHtml);
         }
-        if (!in_array($targetCity, Forecast::$cities)) {
+
+        $database = new Database();
+        $cityRepository = new CityRepository($database);
+        $city = $cityRepository->getByName($targetCityName);
+
+        if (!$city) {
             $weatherDataHtml = <<<HTML
                 <p class="text-center text-danger mt-4 fs-5">
-                    Дані про погоду у місті {$targetCity} відсутні, оберіть найближчий пункт до вашого місця перебування
+                    Дані про погоду у місті {$targetCityName} відсутні, оберіть найближчий пункт до вашого місця перебування
                 </p>
             HTML;
             return $this->getWeatherSection($heading, $weatherDataHtml);
         }
 
-        $apiCityName = Forecast::$apiCityMap[$targetCity] ?? null;
-        if ($apiCityName) {
-            $apiClient = new WeatherApiClient();
+        $apiClient = new WeatherApiClient();
+        $weatherData = $apiClient->getCurrentWeather("$city->positionX,$city->positionY");
+        if ($weatherData) {
+            $heading = "Сьогодні в місті {$targetCityName}";
+            $weatherCard = $this->getWeatherCardContent($weatherData, $apiClient->getWeatherStatusClass($weatherData['current']['condition']['code']));
 
-            $weatherData = $apiClient->getCurrentWeather($apiCityName);
-            if ($weatherData) {
-                $heading = "Сьогодні в місті {$targetCity}";
-                $weatherCard = $this->getWeatherCardContent($weatherData, $apiClient->getWeatherStatusClass($weatherData['current']['condition']['code']));
-
-                $weatherDataHtml = <<<HTML
+            $weatherDataHtml = <<<HTML
                     <ul class="weather__list">
                         $weatherCard
                     </ul>
                 HTML;
-            } else {
-                $heading = "Помилка";
-                $weatherDataHtml = "<p class='alert alert-danger text-center'>Не вдалося отримати дані для міста {$targetCity}.</p>";
-            }
         } else {
-            $heading = "Помилка конфігурації";
-            $weatherDataHtml = "<div class='alert alert-danger text-center'>Координати не знайдені.</div>";
+            $heading = "Помилка";
+            $weatherDataHtml = "<p class='alert alert-danger text-center'>Не вдалося отримати дані для міста {$targetCityName}.</p>";
         }
+
         return $this->getWeatherSection($heading, $weatherDataHtml);
     }
 
     private function getWeatherSection(string $heading, string $weatherDataHtml): string
     {
         $imagePath = PathHelper::getAbsolutePath("assets/images/search-icon.png");
+
+        $database = new Database();
+        $cityRepository = new CityRepository($database);
+        $cities = $cityRepository->getAll();
 
         $result = <<<HTML
         <section class="weather py-5" id="weather">
@@ -140,7 +156,7 @@ class IndexPage extends BasePage
                             </div>
                             <datalist id="cities">
         HTML;
-        $result .= implode("", array_map(fn($value): string => "<option value=\"{$value}\" />", Forecast::$cities));
+        $result .= implode("", array_map(fn($value): string => "<option value=\"{$value}\" />", array_column($cities, 'name')));
         $result .= <<<HTML
                                 </datalist>
                         </form>
@@ -162,7 +178,7 @@ class IndexPage extends BasePage
     public function post(): void
     {
         if (isset($_POST['city'])) {
-            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + Forecast::$COOKIE_LIFETIME, "/");
+            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + ForecastHelper::$COOKIE_LIFETIME, "/");
         }
         header("Location: ./index.php");
     }

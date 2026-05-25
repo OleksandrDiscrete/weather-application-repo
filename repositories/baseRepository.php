@@ -1,6 +1,10 @@
 <?php
+namespace WeatherMaster\Repositories;
 
-include_once "../data/database.php";
+include_once __DIR__ . "/../data/database.php";
+
+use PDO;
+use WeatherMaster\Data\Database;
 
 /**
  * @template T

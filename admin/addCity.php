@@ -1,9 +1,17 @@
 <?php
+namespace WeatherMaster\Admin;
+
 include_once "../data/database.php";
 include_once "../models/city.php";
 include_once "../repositories/cityRepository.php";
+include_once "../helpers/pathHelper.php";
 include_once "../authBase.php";
-include_once "../pathHelper.php";
+
+use WeatherMaster\AuthBase;
+use WeatherMaster\Models\City;
+use WeatherMaster\Data\Database;
+use WeatherMaster\Helpers\PathHelper;
+use WeatherMaster\Repositories\CityRepository;
 
 session_start();
 
@@ -77,8 +85,8 @@ class AddCityPage extends AuthBase
     public function post(): void
     {
         $city = new City(
-            name: htmlspecialchars(trim($_POST['name'] ?? '')), 
-            positionX: (float) ($_POST['positionX'] ?? 0), 
+            name: htmlspecialchars(trim($_POST['name'] ?? '')),
+            positionX: (float) ($_POST['positionX'] ?? 0),
             positionY: (float) ($_POST['positionY'] ?? 0)
         );
 

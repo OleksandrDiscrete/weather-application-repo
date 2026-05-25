@@ -1,7 +1,14 @@
 <?php
+namespace WeatherMaster\Repositories;
 
+include_once __DIR__ . "/../data/database.php";
 include_once "baseRepository.php";
-include_once "../models/adminUser.php";
+include_once __DIR__ . "/../models/adminUser.php";
+
+use PDO;
+use PDOException;
+use WeatherMaster\Data\Database;
+use WeatherMaster\Models\AdminUser;
 
 /**
  * @extends BaseRepository<AdminUser>

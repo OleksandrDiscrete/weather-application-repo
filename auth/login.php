@@ -1,8 +1,15 @@
 <?php
+namespace WeatherMaster\Auth;
+
 include_once "../data/database.php";
 include_once "../repositories/adminUserRepository.php";
+include_once "../helpers/pathHelper.php";
 include_once "../base.php";
-include_once "../pathHelper.php";
+
+use WeatherMaster\BasePage;
+use WeatherMaster\Data\Database;
+use WeatherMaster\Helpers\PathHelper;
+use WeatherMaster\Repositories\AdminUserRepository;
 
 session_start();
 

@@ -1,7 +1,10 @@
 <?php
-require_once "pathHelper.php";
+namespace WeatherMaster;
 
+require_once "helpers/pathHelper.php";
 session_start();
+
+use WeatherMaster\Helpers\PathHelper;
 
 abstract class BasePage
 {

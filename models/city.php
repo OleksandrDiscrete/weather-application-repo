@@ -1,5 +1,5 @@
 <?php
-
+namespace WeatherMaster\Models;
 class City
 {
     public function __construct(
