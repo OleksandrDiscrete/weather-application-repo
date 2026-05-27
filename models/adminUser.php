@@ -7,6 +7,7 @@ class AdminUser
         public string $login = "",
         public string $passwordHash = "",
         public string $email = "",
+        public string $phoneNumber = "",
         public string $registeredAt = ""
     ) {
     }

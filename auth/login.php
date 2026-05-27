@@ -4,6 +4,7 @@ namespace WeatherMaster\Auth;
 
 include_once "../data/database.php";
 include_once "../repositories/adminUserRepository.php";
+include_once "../services/regexService.php";
 include_once "../helpers/pathHelper.php";
 include_once "../base.php";
 
@@ -11,6 +12,7 @@ use WeatherMaster\BasePage;
 use WeatherMaster\Data\Database;
 use WeatherMaster\Helpers\PathHelper;
 use WeatherMaster\Repositories\AdminUserRepository;
+use WeatherMaster\Services\RegexService;
 
 session_start();
 
@@ -37,14 +39,18 @@ class LoginPage extends BasePage
                     $errorHtml
                     <form method="POST" action="$actionPath">
                         <div class="mb-3">
-                            <label for="login" class="form-label">Логін*</label>
-                            <input type="text" class="form-control" id="login" name="login" placeholder="Введіть ваш логін: " required>
+                            <label for="email" class="form-label">Email*</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="john.doe@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phoneNumber" class="form-label">Номер телефону (UA)*</label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="+380000000000" required>
                         </div>
                         <div class="mb-2">
                             <label for="password" class="form-label">Пароль*</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="Введіть ваш пароль: " required>
                         </div>
-                        <div id="requiredFieldsHint" class="form-text mb-2">All fields marked with * are required.</div>
+                        <div id="requiredFieldsHint" class="form-text mb-2">Всі поля позначені (*) є обов'язковими.</div>
                         <button type="submit" class="btn btn-primary w-100">Увійти</button>
                     </form>
                 </div>
@@ -57,30 +63,55 @@ class LoginPage extends BasePage
     public function get(): void
     {
         if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-            header("Location: " . PathHelper::getAbsolutePath("admin/addCity.php"));
+            header("Location: " . PathHelper::getAbsolutePath("admin/"));
             exit();
         }
         $content = $this->getContent();
         $this->printBasePage($content);
     }
 
+    private function isValidInput(string $email, string $password, string $phoneNumber): bool
+    {
+        if (!RegexService::validateEmail($email)) {
+            $this->error = "Будь ласка, введіть коректний email.";
+            return false;
+        }
+        if (!RegexService::validateUaPhone($phoneNumber)) {
+            $this->error = "Номер телефону повинен бути у форматі +380000000000.";
+            return false;
+        }
+        if (empty($password)) {
+            $this->error = "Будь ласка, введіть пароль.";
+            return false;
+        }
+        return true;
+    }
+
     public function post(): void
     {
-        $login = $_POST['login'] ?? '';
+        $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
+        $phoneNumber = $_POST['phoneNumber'] ?? '';
+
+        if (!$this->isValidInput($email, $password, $phoneNumber)) {
+            $this->get();
+            return;
+        }
 
         $db = new Database();
         $adminRepository = new AdminUserRepository($db);
 
-        $user = $adminRepository->findByLogin($login);
+        $user = $adminRepository->findByEmailAndPhoneNumber($email, $phoneNumber);
 
-        if ($user && password_verify($password, $user->passwordHash)) {
+        if (empty($user)) {
+            $this->error = "Невірний email або номер телефону!";
+        } else if (!password_verify($password, $user->passwordHash)) {
+            $this->error = "Невірний пароль!";
+        } else {
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_login'] = $user->login;
-            header("Location: " . PathHelper::getAbsolutePath("admin/addCity.php"));
+            header("Location: " . PathHelper::getAbsolutePath("admin/"));
             exit();
-        } else {
-            $this->error = "Невірний логін або пароль!";
         }
         $this->get();
     }

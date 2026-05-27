@@ -19,6 +19,7 @@ class AdminUserRepository extends BaseRepository
     public function __construct(Database $db)
     {
         parent::__construct($db);
+        $this->initAndSeed();
     }
 
     public function initTable(): void
@@ -29,10 +30,10 @@ class AdminUserRepository extends BaseRepository
                     login TEXT NOT NULL UNIQUE,
                     password_hash TEXT NOT NULL,
                     email TEXT NOT NULL UNIQUE,
+                    phone_number TEXT NOT NULL UNIQUE,
                     registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             ";
-
             $this->pdo->exec($sql);
         } catch (PDOException $e) {
             echo "Error creating table: " . $e->getMessage();
@@ -47,11 +48,12 @@ class AdminUserRepository extends BaseRepository
         try {
             $stmt = $this->pdo->prepare("INSERT INTO " .
                 AdminUser::TABLE_NAME .
-                "(login, password_hash, email) VALUES (:login, :password_hash, :email)");
+                "(login, password_hash, email, phone_number) VALUES (:login, :password_hash, :email, :phoneNumber)");
 
             $stmt->bindParam(':login', $item->login);
             $stmt->bindParam(':password_hash', $item->passwordHash);
             $stmt->bindParam(':email', $item->email);
+            $stmt->bindParam(':phoneNumber', $item->phoneNumber);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -85,6 +87,7 @@ class AdminUserRepository extends BaseRepository
             if ($count == 0) {
                 $admin = new AdminUser();
                 $admin->login = "admin";
+                $admin->phoneNumber = "+380000000000";
                 $admin->email = "admin@weathermaster.ua";
                 $admin->passwordHash = password_hash("SuperSecretPassword123!", PASSWORD_DEFAULT);
 
@@ -98,26 +101,27 @@ class AdminUserRepository extends BaseRepository
         }
     }
     /**
-     * Finds an AdminUser by their login name.
-     * @param string $login
+     * Finds an AdminUser by their email and phone number.
+     * @param string $email
+     * @param string $phoneNumber
      * @return AdminUser|null
      */
-    public function findByLogin(string $login): ?AdminUser
+    public function findByEmailAndPhoneNumber(string $email, string $phoneNumber): ?AdminUser
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM " . AdminUser::TABLE_NAME . " WHERE login = :login LIMIT 1");
-            $stmt->bindParam(':login', $login);
+            $stmt = $this->pdo->prepare("SELECT * FROM " . AdminUser::TABLE_NAME . " WHERE email = :email AND phone_number = :phoneNumber LIMIT 1");
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':phoneNumber', $phoneNumber);
             $stmt->execute();
-
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($data) {
-                $user = new AdminUser($data['id'], $data['login'], $data['password_hash'], $data['email'], $data['registered_at']);
+                $user = new AdminUser($data['id'], $data['login'], $data['password_hash'], $data['email'], $data['phone_number'], $data['registered_at']);
                 return $user;
             }
             return null;
         } catch (PDOException $e) {
-            die("Error fetching user: " . $e->getMessage());
+            die("Error fetching data: " . $e->getMessage());
         }
     }
 }

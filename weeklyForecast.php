@@ -3,15 +3,19 @@ namespace WeatherMaster;
 
 include_once "base.php";
 include_once "services/api.php";
+include_once "services/regexService.php";
 include_once "helpers/forecastHelper.php";
 include_once "helpers/pathHelper.php";
 include_once "repositories/cityRepository.php";
+include_once "models/city.php";
 
 use WeatherMaster\Data\Database;
 use WeatherMaster\Helpers\ForecastHelper;
 use WeatherMaster\Helpers\PathHelper;
 use WeatherMaster\Services\WeatherApiClient;
+use WeatherMaster\Services\RegexService;
 use WeatherMaster\Repositories\CityRepository;
+use WeatherMaster\Models\City;
 
 class WeeklyForecastPage extends BasePage
 {
@@ -22,7 +26,8 @@ class WeeklyForecastPage extends BasePage
 
     private function getIntroContent(): string
     {
-        return <<<'HTML'
+        $alertHtml = $this->getAlert();
+        return <<<HTML
             <section class="intro py-5">
                 <div class="container">
                     <div class="intro__wrap">
@@ -31,6 +36,7 @@ class WeeklyForecastPage extends BasePage
                             <p class="lead">Перевірте погоду в будь-якому місті України на найближчі дні!</p>
                             <a class="btn btn-primary mt-2" href="#weather">Переглянути прогноз</a>
                         </div>
+                        $alertHtml
                     </div>
                 </div>
             </section>
@@ -75,8 +81,12 @@ class WeeklyForecastPage extends BasePage
             $i = 0;
             foreach ($forecastData['forecast']['forecastday'] as $dayData) {
                 $dateObj = strtotime($dayData['date']);
+
                 $date = date('d.m.Y', $dateObj);
-                $dayName = ForecastHelper::$days[date('N', $dateObj) - 1];
+                $day = (int) date('d', $dateObj);
+                $month = (int) date('m', $dateObj);
+                $year = (int) date('Y', $dateObj);
+                $dayName = RegexService::getDayOfWeek($day, $month, $year);
 
                 if ($i === 0) {
                     $tempC = $forecastData['current']['temp_c'];
@@ -133,10 +143,38 @@ class WeeklyForecastPage extends BasePage
         } else {
             $weatherDataHtml = "<p class='text-center text-danger'>Не вдалося завантажити прогноз.</p>";
         }
-
-        return $this->getWeatherSection($heading, $weatherDataHtml);
+        $mainLayout = $this->getWeatherSection($heading, $weatherDataHtml);
+        $cityInfoLayout = $this->getCityInfoSection($city);
+        return $mainLayout . $cityInfoLayout;
     }
 
+    private function getCityInfoSection(?City $city): string
+    {
+        if (!$city || empty($city->infoUrl)) {
+            return "";
+        }
+
+        $cityName = htmlspecialchars($city->name);
+        $infoUrl = htmlspecialchars($city->infoUrl);
+
+        return <<<HTML
+        <section class="city-info py-4 mb-5">
+            <div class="container">
+                <div class="card shadow-sm border-0 bg-white p-4 text-center mx-auto" style="max-width: 600px; border-radius: 20px;">
+                    <h3 class="mb-3">Цікаво дізнатися більше про місто {$cityName}?</h3>
+                    <p class="text-muted mb-4">
+                        Перейдіть за посиланням, щоб переглянути офіційну інформацію, вебкамери або місцеві новини.
+                    </p>
+                    <div>
+                        <a href="{$infoUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">
+                            <i class="bi bi-globe me-2"></i> Більше про {$cityName}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        HTML;
+    }
     private function getWeatherSection(string $heading, string $weatherDataHtml): string
     {
         $imagePath = PathHelper::getAbsolutePath("assets/images/search-icon.png");

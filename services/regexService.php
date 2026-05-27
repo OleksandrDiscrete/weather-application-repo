@@ -6,17 +6,22 @@ class RegexService
     {
         return (bool) preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email);
     }
-
     public static function textToHtml(string $text): string
     {
         $html = preg_replace('/\*(.*?)\*/', '<strong>$1</strong>', $text); // *жирний* перетворює на <strong>
         $html = preg_replace('/\_(.*?)\_/', '<em>$1</em>', $html);         // _курсив_ перетворює на <em>
         return preg_replace('/\n/', '<br>', $html);                        // нові рядки перетворює на <br>
     }
-
+    public static function htmlToText(string $html): string
+    {
+        $text = preg_replace('/<br\s*\/?>/i', "\n", $html);
+        $text = preg_replace('/<strong>(.*?)<\/strong>/i', '*$1*', $text);
+        $text = preg_replace('/<em>(.*?)<\/em>/i', '_$1_', $text);
+        return strip_tags($text);
+    }
     public static function validateUrl(string $url): bool
     {
-        return (bool) preg_match('/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/', $url);
+        return (bool) preg_match('/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([%?=&+#\/\w \.-]*)*\/?$/', $url);
     }
 
     public static function validateUaPhone(string $phone): bool
@@ -57,3 +62,4 @@ class RegexService
         return null;
     }
 }
+

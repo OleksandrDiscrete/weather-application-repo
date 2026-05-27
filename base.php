@@ -6,19 +6,23 @@ include_once __DIR__ . "/helpers/pathHelper.php";
 include_once __DIR__ . "/data/database.php";
 include_once __DIR__ . "/repositories/visitRepository.php";
 include_once __DIR__ . "/models/visitLog.php";
+include_once __DIR__ . "/services/regexService.php";
 
 use WeatherMaster\Helpers\PathHelper;
 use WeatherMaster\Data\Database;
 use WeatherMaster\Repositories\VisitRepository;
+use WeatherMaster\Services\RegexService;
 use WeatherMaster\Models\VisitLog;
+
+session_start();
 
 abstract class BasePage
 {
-    protected $error = "";
-    protected $message = "";
+    protected string $error = "";
+    protected string $message = "";
     private string $title;
 
-    public function __construct($title)
+    public function __construct(string $title)
     {
         $this->title = $title;
     }
@@ -33,8 +37,8 @@ abstract class BasePage
             $visit = new VisitLog(
                 page: $_SERVER['REQUEST_URI'] ?? '/',
                 ipAddress: $_SERVER['HTTP_X_FORWARDED_FOR']
-                    ?? $_SERVER['REMOTE_ADDR']
-                    ?? 'unknown',
+                ?? $_SERVER['REMOTE_ADDR']
+                ?? 'unknown',
                 userAgent: substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255)
             );
 
@@ -44,16 +48,37 @@ abstract class BasePage
         }
     }
 
+    protected function getAlert(): string
+    {
+        $alertHtml = '';
+
+        $alertFilePath = __DIR__ . "/data/alert.txt";
+        if (file_exists($alertFilePath)) {
+            $rawText = file_get_contents($alertFilePath);
+
+            if (trim($rawText) !== '') {
+                $formattedAlert = RegexService::textToHtml($rawText);
+                $alertHtml = <<<HTML
+                    <div class="alert alert-warning shadow-sm mt-4 mb-4 text-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {$formattedAlert}
+                    </div>
+                HTML;
+            }
+        }
+        return $alertHtml;
+    }
+
     public function getHeader(): string
     {
         $indexPath = PathHelper::getAbsolutePath("index.php");
         $weeklyForecastPath = PathHelper::getAbsolutePath("weeklyForecast.php");
         $loginPath = PathHelper::getAbsolutePath("auth/login.php");
         $logoutPath = PathHelper::getAbsolutePath("auth/logout.php");
-        $addCityPath = PathHelper::getAbsolutePath("admin/addCity.php");
+        $adminPath = PathHelper::getAbsolutePath("admin/");
 
         $actionsHTML = isset($_SESSION['admin_logged_in']) ? <<<HTML
-                    <li class="nav-item"><a href="$addCityPath" class="nav-link">Додати місто</a></li>
+                    <li class="nav-item"><a href="$adminPath" class="nav-link">Адміністрування</a></li>
                     <li class="nav-item"><a href="$logoutPath" class="nav-link active-danger">Вийти</a></li>
 HTML
             : <<<HTML
@@ -118,14 +143,14 @@ HTML;
 HTML;
     }
 
-    public function printBasePage($content): void
+    public function printBasePage(string $content): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $this->trackVisit();
         }
 
         $stylePath = PathHelper::getAbsolutePath("assets/css/style.css");
-        $faviconPath = PathHelper::getAbsolutePath("assets/favicon/");
+        $faviconPath = PathHelper::getAbsolutePath("assets/favicon");
 
         echo <<<HTML
             <!doctype html>
@@ -143,12 +168,14 @@ HTML;
                 <link rel="manifest" href="$faviconPath/site.webmanifest">
             </head>
             <body>
-                {$this->getHeader()}
-                <main>
-                    {$content}
-                </main>
-                {$this->getFooter()}
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-YUe2LzesAfSCCTFsKiLkDL0LFf9gHl3jRO+nXZ+MHCivk3uGFzT7hN8MSRJBrC4" crossorigin="anonymous"></script>
+                <div class="wrapper">
+                    {$this->getHeader()}
+                    <main>
+                        {$content}
+                    </main>
+                    {$this->getFooter()}
+                </div>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
             </body>
             </html>
         HTML;
@@ -163,6 +190,6 @@ HTML;
         }
     }
 
-       abstract public function get(): void;
+    abstract public function get(): void;
     abstract public function post(): void;
 }

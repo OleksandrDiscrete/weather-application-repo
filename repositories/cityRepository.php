@@ -18,31 +18,7 @@ class CityRepository extends BaseRepository
     public function __construct(Database $db)
     {
         parent::__construct($db);
-
-        try {
-            if (!$this->pdo->inTransaction()) {
-                $this->pdo->beginTransaction();
-            }
-
-            $this->initTable();
-            $this->seed();
-
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->commit();
-            }
-        } catch (PDOException $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-
-            $code = $this->pdo->errorCode();
-            $info = $this->pdo->errorInfo();
-            $msg = $info[2] ?? $e->getMessage();
-
-            die("<h2 style='color:red;'>Помилка бази даних! Неможливо створити або заповнити таблиці.</h2>
-                 <p><strong>Код помилки PDO:</strong> {$code}</p>
-                 <p><strong>Деталі (errorInfo):</strong> {$msg}</p>");
-        }
+        $this->initAndSeed();
     }
 
     public function initTable(): void
@@ -52,9 +28,9 @@ class CityRepository extends BaseRepository
                 name TEXT NOT NULL UNIQUE,
                 position_x REAL NOT NULL,
                 position_y REAL NOT NULL,
+                info_url TEXT NOT NULL DEFAULT '',
                 added_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )";
-
         $this->pdo->exec($sql);
     }
 
@@ -66,11 +42,12 @@ class CityRepository extends BaseRepository
         try {
             $stmt = $this->pdo->prepare("INSERT INTO " .
                 City::TABLE_NAME .
-                "(name, position_x, position_y) VALUES (:name, :position_x, :position_y)");
+                "(name, position_x, position_y, info_url) VALUES (:name, :positionX, :positionY, :infoUrl)");
 
             $stmt->bindParam(':name', $item->name);
-            $stmt->bindParam(':position_x', $item->positionX);
-            $stmt->bindParam(':position_y', $item->positionY);
+            $stmt->bindParam(':positionX', $item->positionX);
+            $stmt->bindParam(':positionY', $item->positionY);
+            $stmt->bindParam(':infoUrl', $item->infoUrl);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -96,12 +73,24 @@ class CityRepository extends BaseRepository
     {
         try {
             $stmt = $this->pdo->query("SELECT * FROM " . City::TABLE_NAME . " ORDER BY name ASC");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $cities = [];
+            foreach ($rows as $row) {
+                $cities[] = new City(
+                    id: (int) $row['id'],
+                    name: $row['name'],
+                    positionX: (float) $row['position_x'],
+                    positionY: (float) $row['position_y'],
+                    infoUrl: $row['info_url']
+                );
+            }
+            
+            return $cities;
         } catch (PDOException $e) {
             die("Error fetching data: " . $e->getMessage());
         }
     }
-
     public function getByName(string $name): ?City
     {
         try {
@@ -111,7 +100,7 @@ class CityRepository extends BaseRepository
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($data) {
-                $city = new City($data['id'], $data['name'], $data['position_x'], $data['position_y']);
+                $city = new City($data['id'], $data['name'], $data['position_x'], $data['position_y'], $data['info_url']);
                 return $city;
             }
             return null;
@@ -119,7 +108,6 @@ class CityRepository extends BaseRepository
             die("Error fetching data: " . $e->getMessage());
         }
     }
-
     /**
      * Seeds the database with default cities and their coordinates.
      */
@@ -161,6 +149,7 @@ class CityRepository extends BaseRepository
                     $city->name = $cityName;
                     $city->positionX = (float) $coords[0];
                     $city->positionY = (float) $coords[1];
+                    $city->infoUrl = "";
                     $this->add($city);
                 }
             }
