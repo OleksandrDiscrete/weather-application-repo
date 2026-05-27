@@ -2,7 +2,7 @@
 namespace WeatherMaster\Helpers;
 class PathHelper
 {
-    public static string $applicationPath = "http://localhost/weather-application-repo/";
+  public static string $applicationPath = "http://localhost/weather-application-repo-main/";
 
     public static function getBasePath(): string
     {

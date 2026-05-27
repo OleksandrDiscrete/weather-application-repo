@@ -163,4 +163,6 @@ HTML;
         }
     }
 
-    abstract public function get(): vo
+       abstract public function get(): void;
+    abstract public function post(): void;
+}
