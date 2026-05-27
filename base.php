@@ -1,10 +1,16 @@
 <?php
+
 namespace WeatherMaster;
 
-require_once "helpers/pathHelper.php";
-session_start();
+include_once __DIR__ . "/helpers/pathHelper.php";
+include_once __DIR__ . "/data/database.php";
+include_once __DIR__ . "/repositories/visitRepository.php";
+include_once __DIR__ . "/models/visitLog.php";
 
 use WeatherMaster\Helpers\PathHelper;
+use WeatherMaster\Data\Database;
+use WeatherMaster\Repositories\VisitRepository;
+use WeatherMaster\Models\VisitLog;
 
 abstract class BasePage
 {
@@ -12,19 +18,36 @@ abstract class BasePage
     protected $message = "";
     private string $title;
 
-    /**
-     * @param string $title
-     */
     public function __construct($title)
     {
         $this->title = $title;
+    }
+
+    private function trackVisit(): void
+    {
+        try {
+            $db = new Database();
+            $visitRepo = new VisitRepository($db);
+            $visitRepo->initTable();
+
+            $visit = new VisitLog(
+                page: $_SERVER['REQUEST_URI'] ?? '/',
+                ipAddress: $_SERVER['HTTP_X_FORWARDED_FOR']
+                    ?? $_SERVER['REMOTE_ADDR']
+                    ?? 'unknown',
+                userAgent: substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255)
+            );
+
+            $visitRepo->add($visit);
+        } catch (\Throwable $e) {
+            // Не переривати сторінку якщо лічильник впав
+        }
     }
 
     public function getHeader(): string
     {
         $indexPath = PathHelper::getAbsolutePath("index.php");
         $weeklyForecastPath = PathHelper::getAbsolutePath("weeklyForecast.php");
-
         $loginPath = PathHelper::getAbsolutePath("auth/login.php");
         $logoutPath = PathHelper::getAbsolutePath("auth/logout.php");
         $addCityPath = PathHelper::getAbsolutePath("admin/addCity.php");
@@ -55,6 +78,7 @@ HTML;
             </div>
         </div>
     </header>
+
 HTML;
     }
 
@@ -90,14 +114,16 @@ HTML;
             </div>
         </div>
     </footer>
+
 HTML;
     }
 
-    /**
-     * @param string $content
-     */
     public function printBasePage($content): void
     {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $this->trackVisit();
+        }
+
         $stylePath = PathHelper::getAbsolutePath("assets/css/style.css");
         $faviconPath = PathHelper::getAbsolutePath("assets/favicon/");
 
@@ -117,14 +143,12 @@ HTML;
                 <link rel="manifest" href="$faviconPath/site.webmanifest">
             </head>
             <body>
-                <div class="wrapper">
-                    {$this->getHeader()}
-                    <main class="main">
-                        {$content}
-                    </main>
-                    {$this->getFooter()}
-                </div>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+                {$this->getHeader()}
+                <main>
+                    {$content}
+                </main>
+                {$this->getFooter()}
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-YUe2LzesAfSCCTFsKiLkDL0LFf9gHl3jRO+nXZ+MHCivk3uGFzT7hN8MSRJBrC4" crossorigin="anonymous"></script>
             </body>
             </html>
         HTML;
@@ -134,11 +158,9 @@ HTML;
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->post();
-        } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        } else {
             $this->get();
         }
     }
 
-    public abstract function get();
-    public abstract function post();
-}
+    abstract public function get(): vo

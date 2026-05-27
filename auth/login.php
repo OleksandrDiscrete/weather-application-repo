@@ -1,4 +1,5 @@
 <?php
+
 namespace WeatherMaster\Auth;
 
 include_once "../data/database.php";
@@ -56,7 +57,7 @@ class LoginPage extends BasePage
     public function get(): void
     {
         if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-            header("Location: admin.php");
+            header("Location: " . PathHelper::getAbsolutePath("admin/addCity.php"));
             exit();
         }
         $content = $this->getContent();
@@ -76,8 +77,7 @@ class LoginPage extends BasePage
         if ($user && password_verify($password, $user->passwordHash)) {
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_login'] = $user->login;
-
-            header("Location: " . PathHelper::getAbsolutePath("index.php"));
+            header("Location: " . PathHelper::getAbsolutePath("admin/addCity.php"));
             exit();
         } else {
             $this->error = "Невірний логін або пароль!";
