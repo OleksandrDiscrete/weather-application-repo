@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<guestbook>
+  <entry>
+    <author>Іван Богданов</author>
+    <date>2026-06-01 10:00</date>
+    <message>Дуже крутий сайт! Зручно дивитися погоду.</message>
+  </entry>
+  <entry>
+    <author>Admin</author>
+    <date>2026-06-01 12:15</date>
+    <message>Дякуємо за відгуки! Графіки будуть у наступному оновленні.</message>
+  </entry>
+  <entry>
+    <author>Олександр Олександров</author>
+    <date>2026-06-01 11:41</date>
+    <message>Файно є!</message>
+  </entry>
+  <entry>
+    <author>Олександр Олександров</author>
+    <date>2026-06-01 11:42</date>
+    <message>Файно є!</message>
+  </entry>
+  <entry>
+    <author>Олександр Олександров1</author>
+    <date>2026-06-01 11:47</date>
+    <message>Добре</message>
+  </entry>
+</guestbook>

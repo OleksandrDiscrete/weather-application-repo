@@ -11,5 +11,5 @@ class City
     ) {
     }
 
-    public const string TABLE_NAME = "city";
+    public const TABLE_NAME = "cities";
 }

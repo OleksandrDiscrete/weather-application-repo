@@ -19,7 +19,9 @@ use WeatherMaster\Repositories\CityRepository;
 use WeatherMaster\Repositories\VisitRepository;
 use WeatherMaster\Services\RegexService;
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 class AdminPage extends AuthBase
 {
@@ -212,11 +214,13 @@ class AdminPage extends AuthBase
     HTML;
     }
 
-    /**
-     * Generates and downloads the CSV file containing all cities.
-     */
+
     private function exportCitiesCsv(): void
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         $db = new Database();
         $cityRepo = new CityRepository($db);
         $cities = $cityRepo->getAll();
@@ -268,9 +272,7 @@ class AdminPage extends AuthBase
         return true;
     }
 
-    /**
-     * Handles saving the alert text file (HTML -> Text via Regex)
-     */
+
     private function saveAlertAction(): void
     {
         $incomingHtmlFromAdmin = $_POST['alert_html'] ?? '';
@@ -286,9 +288,6 @@ class AdminPage extends AuthBase
         $this->get();
     }
 
-    /**
-     * Handles routing POST requests based on the hidden 'action' field
-     */
     public function post(): void
     {
         $action = $_POST['action'] ?? '';
