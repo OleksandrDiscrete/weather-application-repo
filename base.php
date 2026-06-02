@@ -38,7 +38,6 @@ abstract class BasePage
 
             $visitRepo->add(VisitLogFactory::instantiate());
         } catch (\Throwable $e) {
-            // Не переривати сторінку якщо лічильник впав
         }
     }
 
@@ -67,6 +66,8 @@ abstract class BasePage
     {
         $indexPath = PathHelper::getAbsolutePath("index.php");
         $weeklyForecastPath = PathHelper::getAbsolutePath("weeklyForecast.php");
+        $guestbookPath = PathHelper::getAbsolutePath("guestbook.php");
+        $chatPath = PathHelper::getAbsolutePath("chat.php"); 
         $loginPath = PathHelper::getAbsolutePath("auth/login.php");
         $logoutPath = PathHelper::getAbsolutePath("auth/logout.php");
         $adminPath = PathHelper::getAbsolutePath("admin/");
@@ -90,14 +91,15 @@ HTML;
                 <nav>
                     <ul class="nav nav-pills">
                         <li class="nav-item"><a href="$indexPath" class="nav-link" aria-current="page">Головна</a></li>
-                        <li class="nav-item"><a href="$weeklyForecastPath" class="nav-link">Щотижневий прогноз</a></li>
+                        <li class="nav-item"><a href="$weeklyForecastPath" class="nav-link">Прогноз</a></li>
+                        <li class="nav-item"><a href="$guestbookPath" class="nav-link text-success">Гостьова</a></li>
+                        <li class="nav-item"><a href="$chatPath" class="nav-link text-primary"><i class="bi bi-chat-fill"></i> Чат</a></li>
                         $actionsHTML
                     </ul>
                 </nav>
             </div>
         </div>
     </header>
-
 HTML;
     }
 
