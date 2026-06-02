@@ -12,6 +12,9 @@ class VisitLog
         public string $visitedAt = ""
     ) {
     }
-
+    /**
+     * The name of the model in the database
+     * @var string
+     */
     public const TABLE_NAME = "visit_log";
 }

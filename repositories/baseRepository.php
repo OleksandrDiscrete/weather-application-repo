@@ -2,50 +2,25 @@
 namespace WeatherMaster\Repositories;
 
 include_once __DIR__ . "/../data/database.php";
-
-use PDO;
-use PDOException;
-use WeatherMaster\Data\Database;
+use WeatherMaster\Data\DatabaseInterface;
 
 /**
  * @template T
  */
 abstract class BaseRepository
 {
-    protected Database $db;
-    protected ?PDO $pdo;
+    protected DatabaseInterface $db;
 
-    public function __construct(Database $db)
+    public function __construct(DatabaseInterface $db)
     {
         $this->db = $db;
-        $this->pdo = $this->db->connect();
     }
-    protected function initAndSeed()
+    protected function initAndSeed(): void
     {
-        try {
-            if (!$this->pdo->inTransaction()) {
-                $this->pdo->beginTransaction();
-            }
-
+        $this->db->handleTransaction(function () {
             $this->initTable();
             $this->seed();
-
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->commit();
-            }
-        } catch (PDOException $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
-
-            $code = $this->pdo->errorCode();
-            $info = $this->pdo->errorInfo();
-            $msg = $info[2] ?? $e->getMessage();
-
-            die("<h2 style='color:red;'>Помилка бази даних! Неможливо створити або заповнити таблиці.</h2>
-                 <p><strong>Код помилки PDO:</strong> {$code}</p>
-                 <p><strong>Деталі (errorInfo):</strong> {$msg}</p>");
-        }
+        });
     }
     public abstract function initTable(): void;
     /**

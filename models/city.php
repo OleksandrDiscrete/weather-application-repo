@@ -10,6 +10,9 @@ class City
         public string $infoUrl = ""
     ) {
     }
-
-    public const string TABLE_NAME = "city";
+    /**
+     * The name of the model in the database
+     * @var string
+     */
+    public const TABLE_NAME = "city";
 }

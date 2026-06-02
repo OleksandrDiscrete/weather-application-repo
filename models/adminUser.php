@@ -11,5 +11,9 @@ class AdminUser
         public string $registeredAt = ""
     ) {
     }
+    /**
+     * The name of the model in the database
+     * @var string
+     */
     public const TABLE_NAME = "admin_user";
 }

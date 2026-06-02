@@ -6,13 +6,15 @@ include_once __DIR__ . "/helpers/pathHelper.php";
 include_once __DIR__ . "/data/database.php";
 include_once __DIR__ . "/repositories/visitRepository.php";
 include_once __DIR__ . "/models/visitLog.php";
+include_once __DIR__ . "/models/factories/visitLogFactory.php";
 include_once __DIR__ . "/services/regexService.php";
 
 use WeatherMaster\Helpers\PathHelper;
 use WeatherMaster\Data\Database;
 use WeatherMaster\Repositories\VisitRepository;
 use WeatherMaster\Services\RegexService;
-use WeatherMaster\Models\VisitLog;
+use WeatherMaster\Models\Factories\VisitLogFactory;
+// use WeatherMaster\Models\VisitLog;
 
 session_start();
 
@@ -34,15 +36,7 @@ abstract class BasePage
             $visitRepo = new VisitRepository($db);
             $visitRepo->initTable();
 
-            $visit = new VisitLog(
-                page: $_SERVER['REQUEST_URI'] ?? '/',
-                ipAddress: $_SERVER['HTTP_X_FORWARDED_FOR']
-                ?? $_SERVER['REMOTE_ADDR']
-                ?? 'unknown',
-                userAgent: substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255)
-            );
-
-            $visitRepo->add($visit);
+            $visitRepo->add(VisitLogFactory::instantiate());
         } catch (\Throwable $e) {
             // Не переривати сторінку якщо лічильник впав
         }
@@ -151,6 +145,7 @@ HTML;
 
         $stylePath = PathHelper::getAbsolutePath("assets/css/style.css");
         $faviconPath = PathHelper::getAbsolutePath("assets/favicon");
+        $scriptsPath = PathHelper::getAbsolutePath("assets/scripts");
 
         echo <<<HTML
             <!doctype html>
@@ -174,8 +169,19 @@ HTML;
                         {$content}
                     </main>
                     {$this->getFooter()}
+                    <div class="weather-toast-container toast-container position-fixed bottom-0 end-0">
+                        <div id="liveAlertToast" class="toast text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="toast-header bg-warning text-dark border-bottom border-dark-subtle">
+                                <i class="bi bi-bell-fill me-2"></i>
+                                <strong class="me-auto">Нове повідомлення!</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <div class="toast-body" id="toast-body-content"></div>
+                        </div>
+                    </div>
                 </div>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+                <script src="$scriptsPath/alert.js" defer></script>
             </body>
             </html>
         HTML;

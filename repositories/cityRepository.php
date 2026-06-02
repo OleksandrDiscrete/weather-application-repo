@@ -5,17 +5,15 @@ include_once "baseRepository.php";
 include_once __DIR__ . "/../models/city.php";
 include_once __DIR__ . "/../data/database.php";
 
-use PDO;
-use PDOException;
 use WeatherMaster\Models\City;
-use WeatherMaster\Data\Database;
+use WeatherMaster\Data\DatabaseInterface;
 
 /**
  * @extends BaseRepository<City>
  */
 class CityRepository extends BaseRepository
 {
-    public function __construct(Database $db)
+    public function __construct(DatabaseInterface $db)
     {
         parent::__construct($db);
         $this->initAndSeed();
@@ -31,7 +29,7 @@ class CityRepository extends BaseRepository
                 info_url TEXT NOT NULL DEFAULT '',
                 added_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )";
-        $this->pdo->exec($sql);
+        $this->db->execute($sql);
     }
 
     /**
@@ -39,74 +37,50 @@ class CityRepository extends BaseRepository
      */
     public function add($item): bool
     {
-        try {
-            $stmt = $this->pdo->prepare("INSERT INTO " .
-                City::TABLE_NAME .
-                "(name, position_x, position_y, info_url) VALUES (:name, :positionX, :positionY, :infoUrl)");
+        $sql = "INSERT INTO " .
+            City::TABLE_NAME .
+            "(name, position_x, position_y, info_url) VALUES (:name, :positionX, :positionY, :infoUrl)";
 
-            $stmt->bindParam(':name', $item->name);
-            $stmt->bindParam(':positionX', $item->positionX);
-            $stmt->bindParam(':positionY', $item->positionY);
-            $stmt->bindParam(':infoUrl', $item->infoUrl);
-
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                return false;
-            }
-            die("Error inserting data: " . $e->getMessage());
-        }
+        return $this->db->executeWithParameters($sql, [
+            'name' => $item->name,
+            'positionX' => $item->positionX,
+            'positionY' => $item->positionY,
+            'infoUrl' => $item->infoUrl
+        ]);
     }
 
     public function remove(int $id): bool
     {
-        try {
-            $stmt = $this->pdo->prepare("DELETE FROM " . City::TABLE_NAME . " WHERE id = :id");
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            die("Error deleting data: " . $e->getMessage());
-        }
+        $sql = "DELETE FROM " . City::TABLE_NAME . " WHERE id = :id";
+        return $this->db->executeWithParameters($sql, ['id' => $id]);
     }
 
     public function getAll(): array
     {
-        try {
-            $stmt = $this->pdo->query("SELECT * FROM " . City::TABLE_NAME . " ORDER BY name ASC");
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            $cities = [];
-            foreach ($rows as $row) {
-                $cities[] = new City(
-                    id: (int) $row['id'],
-                    name: $row['name'],
-                    positionX: (float) $row['position_x'],
-                    positionY: (float) $row['position_y'],
-                    infoUrl: $row['info_url']
-                );
-            }
-            
-            return $cities;
-        } catch (PDOException $e) {
-            die("Error fetching data: " . $e->getMessage());
+        $rows = $this->db->fetchMany("SELECT * FROM " . City::TABLE_NAME . " ORDER BY name ASC");
+
+        $cities = [];
+        foreach ($rows as $row) {
+            $cities[] = new City(
+                id: (int) $row['id'],
+                name: $row['name'],
+                positionX: (float) $row['position_x'],
+                positionY: (float) $row['position_y'],
+                infoUrl: $row['info_url']
+            );
         }
+
+        return $cities;
     }
     public function getByName(string $name): ?City
     {
-        try {
-            $stmt = $this->pdo->prepare("SELECT * FROM " . City::TABLE_NAME . " WHERE name = :name LIMIT 1");
-            $stmt->bindParam(':name', $name);
-            $stmt->execute();
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $data = $this->db->fetchOne("SELECT * FROM " . City::TABLE_NAME . " WHERE name = :name LIMIT 1", ['name' => $name]);
 
-            if ($data) {
-                $city = new City($data['id'], $data['name'], $data['position_x'], $data['position_y'], $data['info_url']);
-                return $city;
-            }
-            return null;
-        } catch (PDOException $e) {
-            die("Error fetching data: " . $e->getMessage());
+        if ($data) {
+            $city = new City($data['id'], $data['name'], $data['position_x'], $data['position_y'], $data['info_url']);
+            return $city;
         }
+        return null;
     }
     /**
      * Seeds the database with default cities and their coordinates.
@@ -137,9 +111,7 @@ class CityRepository extends BaseRepository
             "Тернопіль" => "49.55,25.59"
         ];
 
-        $stmt = $this->pdo->query("SELECT COUNT(*) FROM " . City::TABLE_NAME);
-        $count = $stmt->fetchColumn();
-
+        $count = $this->db->fetchColumn("SELECT COUNT(*) FROM " . City::TABLE_NAME);
         if ($count == 0) {
             foreach ($apiCityMap as $cityName => $coordinates) {
                 $coords = explode(",", $coordinates);

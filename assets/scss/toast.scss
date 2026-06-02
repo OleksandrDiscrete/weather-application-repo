@@ -1,0 +1,79 @@
+$alert-bg-color: rgba(255, 193, 7, 0.9);
+$alert-header-bg: rgba(255, 193, 7, 0.6);
+$alert-icon-color: #d97706;
+
+.weather-toast-container {
+  z-index: 1000;
+  padding: 1rem 1.5rem;
+
+  .weather-alert-toast {
+    background-color: $alert-bg-color;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    color: $text-dark;
+
+    .toast-header {
+      background-color: $alert-header-bg;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      color: $text-dark;
+      padding: 0.75rem 1rem;
+
+      strong {
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+
+      .alert-icon {
+        color: $alert-icon-color;
+        font-size: 1.1rem;
+        animation: ring 2s infinite ease-in-out;
+        transform-origin: top center;
+      }
+
+      .btn-close {
+        filter: brightness(0.4);
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+
+    .toast-body {
+      padding: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+
+      strong {
+        font-weight: 700;
+        color: $text-dark;
+      }
+      em {
+        color: $text-muted;
+      }
+    }
+  }
+}
+
+@keyframes ring {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: rotate(8deg);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: rotate(-8deg);
+  }
+}

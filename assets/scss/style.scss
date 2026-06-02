@@ -35,6 +35,7 @@ $fw-black: 900;
 }
 
 @import "./general.scss";
-@import "./header.scss";
+@import "./partials/header.scss";
 @import "./auth.scss";
-@import "./footer.scss";
+@import "./partials/footer.scss";
+@import "./toast.scss";
