@@ -4,7 +4,7 @@ namespace WeatherMaster\Services;
 
 class WeatherApiClient
 {
-    private $apiKey;
+    private string $apiKey;
     private $baseUrl = "http://api.weatherapi.com/v1";
 
     public function __construct()
@@ -53,7 +53,7 @@ class WeatherApiClient
         return json_decode($response, true);
     }
 
-    public function getWeatherStatusClass(int $weather_code): string
+    public static function getWeatherStatusClass(int $weather_code): string
     {
         $className = "weather__item-status";
         switch ($weather_code) {

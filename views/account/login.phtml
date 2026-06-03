@@ -1,0 +1,42 @@
+<section class="auth py-5">
+    <div class="container">
+        <div class="auth__wrap">
+            <div class="card shadow-sm mx-auto px-4 py-3" style="max-width: 500px; border-radius: 15px;">
+                <h2 class="text-center mb-4">Увійдіть у систему</h2>
+
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="/auth/login">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email*</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                            value="<?= $oldInput['email'] ?>" placeholder="john.doe@example.com" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">Номер телефону (UA)*</label>
+                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber"
+                            value="<?= $oldInput['phoneNumber'] ?>" placeholder="+380000000000" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="password" class="form-label">Пароль*</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Введіть ваш пароль" required>
+                    </div>
+
+                    <div id="requiredFieldsHint" class="form-text mb-4 text-muted">
+                        Всі поля позначені (*) є обов'язковими.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Увійти</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

@@ -5,7 +5,6 @@ include_once __DIR__ . "/../data/database.php";
 include_once __DIR__ . "/../repositories/cityRepository.php";
 include_once __DIR__ . "/../services/regexService.php";
 include_once __DIR__ . "/../services/api.php";
-include_once __DIR__ . "/../helpers/pathHelper.php";
 include_once __DIR__ . "/../helpers/forecastHelper.php";
 
 use WeatherMaster\Data\Database;
@@ -13,7 +12,6 @@ use WeatherMaster\Helpers\ForecastHelper;
 use WeatherMaster\Repositories\CityRepository;
 use WeatherMaster\Services\RegexService;
 use WeatherMaster\Services\WeatherApiClient;
-use WeatherMaster\Helpers\PathHelper;
 
 class WeatherController extends BaseController
 {
@@ -32,7 +30,7 @@ class WeatherController extends BaseController
 
         return $distanceFromCapital ? "📍 Відстань від Києва: {$distanceFromCapital} км" : "";
     }
-    public function index(): void
+    public function getIndex(): void
     {
         $targetCityName = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
         $heading = "Оберіть Ваше місто, щоб перевірити погоду";
@@ -58,70 +56,69 @@ class WeatherController extends BaseController
         }
 
         $cities = $this->cityRepository->getAll();
-        $applicationAlert = $this->getApplicationAlert(); 
+        $applicationAlert = $this->getApplicationAlert();
         $day = (int) date('d');
         $month = (int) date('m');
         $year = (int) date('Y');
         $dayName = RegexService::getDayOfWeek($day, $month, $year);
 
-        $this->render('home/index', [
-            'pageTitle'        => 'WeatherMaster Home',
-            'heading'          => $heading,
-            'alertMessage'     => $alertMessage,
-            'weatherData'      => $weatherData,
-            'targetCity'       => $targetCity,
-            'cities'           => $cities,
-            'distanceInfo'     => $distanceInfo,
+        $this->render('weather/index', [
+            'pageTitle' => 'WeatherMaster Home',
+            'heading' => $heading,
+            'alertMessage' => $alertMessage,
+            'weatherData' => $weatherData,
+            'targetCity' => $targetCity,
+            'cities' => $cities,
+            'distanceInfo' => $distanceInfo,
             'statusClass' => $statusClass,
             'dayName' => $dayName,
-            'applicationAlert' => $applicationAlert,
-            'imagePath'        => PathHelper::getAbsolutePath("assets/images/weather-icon.png")
+            'applicationAlert' => $applicationAlert
         ]);
     }
-    public function weeklyForecast(): void
+    public function getWeeklyForecast(): void
     {
         $targetCityName = isset($_COOKIE["city"]) ? trim($_COOKIE["city"]) : null;
-        $heading = "Оберіть Ваше місто, щоб перевірити погоду";
-        $alertMessage = "Дані про погоду відсутні. Введіть назву міста у поле вище та натисніть кнопку пошуку.";
+        $parameters = [
+            'pageTitle' => 'WeatherMaster Weekly Forecast',
+            'heading' => "Оберіть Ваше місто, щоб перевірити погоду",
+            'alertMessage' => "Дані про погоду відсутні. Введіть назву міста у поле вище та натисніть кнопку пошуку.",
+            'forecastData' => null,
+            'targetCity' => null,
+            'cities' => $this->cityRepository->getAll(),
+            'applicationAlert' => $this->getApplicationAlert()
+        ];
 
-        // $statusClass = null;
-        $distanceInfo = null;
-        $weatherData = null;
+        if (!isset($targetCityName)) {
+            $this->render('home/weekly', $parameters);
+            return;
+        }
+
         $targetCity = $this->cityRepository->getByName($targetCityName);
         if (!$targetCity) {
-            $alertMessage = "Дані про погоду у місті {$targetCityName} відсутні, оберіть найближчий пункт до вашого місця перебування";
+            $parameters['alertMessage'] = "Дані про погоду у місті {$targetCityName} відсутні, оберіть найближчий пункт до вашого місця перебування";
         } else {
             $apiClient = new WeatherApiClient();
-            $weatherData = $forecastData = $apiClient->getForecast("$city->positionX,$city->positionY", 5);
-            if ($weatherData) {
-                $heading = "Сьогодні в місті {$targetCityName}";
-                // $statusClass = WeatherApiClient::getWeatherStatusClass($weatherData['current']['condition']['code']);
-                $distanceInfo = $this->getDistanceToKyiv($weatherData['location']);
+            $forecastData = $apiClient->getForecast("$targetCity->positionX,$targetCity->positionY", 5);
+            if ($forecastData) {
+                $parameters["forecastData"] = $forecastData;
+                $parameters["heading"] = "Сьогодні в місті {$targetCityName}";
             } else {
-                $heading = "Помилка";
-                $alertMessage = "Не вдалося отримати дані для міста {$targetCityName}.";
+                $parameters["heading"] = "Помилка";
+                $parameters['alertMessage'] =
+                    "Не вдалося отримати дані для міста {$targetCityName}.";
             }
         }
 
-        $cities = $this->cityRepository->getAll();
-        $applicationAlert = $this->getApplicationAlert(); 
-        $day = (int) date('d');
-        $month = (int) date('m');
-        $year = (int) date('Y');
-        $dayName = RegexService::getDayOfWeek($day, $month, $year);
-
-        $this->render('home/weekly', [
-            'pageTitle'        => 'WeatherMaster Home',
-            'heading'          => $heading,
-            'alertMessage'     => $alertMessage,
-            'weatherData'      => $weatherData,
-            'targetCity'       => $targetCity,
-            'cities'           => $cities,
-            'distanceInfo'     => $distanceInfo,
-            'statusClass' => $statusClass,
-            'dayName' => $dayName,
-            'applicationAlert' => $applicationAlert,
-            'imagePath'        => PathHelper::getAbsolutePath("assets/images/weather-icon.png")
-        ]);
+        $this->render('weather/weekly', $parameters);
     }
+    public function saveCity(): void
+    {
+        if (isset($_POST['city'])) {
+            setcookie("city", htmlspecialchars(trim($_POST['city'])), time() + ForecastHelper::$COOKIE_LIFETIME, "/");
+        }
+        $redirectUrl = $_SERVER['HTTP_REFERER'] ?? '/';
+        header("Location: " . $redirectUrl);
+        exit();
+    }
+
 }

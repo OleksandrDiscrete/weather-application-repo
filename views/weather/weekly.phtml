@@ -1,6 +1,13 @@
 <?php
+include_once __DIR__ . "/../../services/regexService.php";
+include_once __DIR__ . "/../../helpers/pathHelper.php";
+include_once __DIR__ . "/../../services/api.php";
+
 use WeatherMaster\Services\RegexService;
 use WeatherMaster\Services\WeatherApiClient;
+use WeatherMaster\Helpers\PathHelper;
+
+$imagePath = PathHelper::getAbsolutePath("assets/images/search-icon.png")
 ?>
 
 <section class="intro py-5">
@@ -27,8 +34,8 @@ use WeatherMaster\Services\WeatherApiClient;
             <div class="text-center mb-3">
                 <h2><?= htmlspecialchars($heading) ?></h2>
             </div>
-            
-            <form class="weather__form" method="POST" action="/weekly" class="mt-4">
+
+            <form class="weather__form" method="POST" action="/" class="mt-4">
                 <div class="input-group mb-3">
                     <input type="text" list="cities" id="city" name="city" class="form-control"
                         placeholder="Введіть назву міста..." required aria-describedby="saveButton">
@@ -42,21 +49,18 @@ use WeatherMaster\Services\WeatherApiClient;
                     <?php endforeach; ?>
                 </datalist>
             </form>
-
             <?php if (!empty($forecastData) && isset($forecastData['forecast']['forecastday'])): ?>
                 <ul class="weather__list d-flex flex-wrap gap-3">
-                    <?php foreach($forecastData['forecast']['forecastday'] as $i => $dayData): ?>
+                    <?php foreach ($forecastData['forecast']['forecastday'] as $i => $dayData): ?>
                         <?php
-                        // 1. Date and Day Parsing
                         $dateObj = strtotime($dayData['date']);
                         $date = date('d.m.Y', $dateObj);
                         $dayName = RegexService::getDayOfWeek(
-                            (int) date('d', $dateObj), 
-                            (int) date('m', $dateObj), 
+                            (int) date('d', $dateObj),
+                            (int) date('m', $dateObj),
                             (int) date('Y', $dateObj)
                         );
 
-                        // 2. Data Extraction: Index 0 uses 'current', others use 'day'
                         if ($i === 0) {
                             $tempC = $forecastData['current']['temp_c'];
                             $tempF = $forecastData['current']['temp_f'];
@@ -98,8 +102,10 @@ use WeatherMaster\Services\WeatherApiClient;
                                 <img src="<?= htmlspecialchars($iconUrl) ?>" alt="icon"> <?= htmlspecialchars($conditionText) ?>
                             </h5>
                             <div class="weather__item-metrics">
-                                <p class="weather__item-metric"><strong>Температура:</strong> <?= $tempC ?>°C (<?= $minTemp ?>...<?= $maxTemp ?>), <?= $tempF ?>°F, <?= $tempK ?>K</p>
-                                <p class="weather__item-metric"><strong>Вітер:</strong> <?= $windKph ?> км/год (<?= $windMs ?> м/с)</p>
+                                <p class="weather__item-metric"><strong>Температура:</strong> <?= $tempC ?>°C
+                                    (<?= $minTemp ?>...<?= $maxTemp ?>), <?= $tempF ?>°F, <?= $tempK ?>K</p>
+                                <p class="weather__item-metric"><strong>Вітер:</strong> <?= $windKph ?> км/год (<?= $windMs ?>
+                                    м/с)</p>
                                 <p class="weather__item-metric"><strong>Вологість:</strong> <?= $humidity ?>%</p>
                                 <p class="weather__item-metric"><strong>Ймовірність дощу:</strong> <?= $chanceOfRain ?>%</p>
                                 <p class="weather__item-metric"><strong>Опади:</strong> <?= $precipMm ?> мм</p>

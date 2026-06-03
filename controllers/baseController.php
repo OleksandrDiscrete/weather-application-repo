@@ -1,8 +1,14 @@
 <?php
 namespace WeatherMaster\Controllers;
 
+include_once __DIR__ . "/../data/database.php";
+include_once __DIR__ . "/../repositories/visitRepository.php";
+include_once __DIR__ . "/../services/regexService.php";
+include_once __DIR__ . "/../models/factories/visitLogFactory.php";
+
 use WeatherMaster\Data\Database;
 use WeatherMaster\Repositories\VisitRepository;
+use WeatherMaster\Services\RegexService;
 use WeatherMaster\Models\Factories\VisitLogFactory;
 
 abstract class BaseController
