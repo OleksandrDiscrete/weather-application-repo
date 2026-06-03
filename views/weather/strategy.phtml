@@ -1,0 +1,32 @@
+<section class="py-5">
+    <div class="container">
+        <h1 class="mb-4 text-center"><i class="bi bi-gear-wide-connected text-primary me-2"></i>Шаблон проєктування
+            Strategy</h1>
+
+        <div class="card shadow mx-auto" style="max-width: 600px;">
+            <div class="card-body text-center">
+                <p class="text-muted mb-4">Ця сторінка демонструє застосування патерну Стратегія для конвертації
+                    температури.</p>
+
+                <h4 class="mb-4">Базова температура в системі: <b>
+                        <?= htmlspecialchars($baseTemp) ?>
+                    </b></h4>
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fs-5">Використано <code>CelsiusStrategy</code>:</span>
+                    <span class="badge bg-success fs-5">
+                        <?= htmlspecialchars($celsiusResult) ?>
+                    </span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fs-5">Використано <code>FahrenheitStrategy</code>:</span>
+                    <span class="badge bg-warning text-dark fs-5">
+                        <?= htmlspecialchars($fahrenheitResult) ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -9,7 +9,7 @@ const toast = new bootstrap.Toast(toastElement, { delay: ALERTS_INTERVAL });
 function getAPIBaseUrl() {
   const currentUrl = window.location.href;
   const url = new URL(currentUrl);
-  return `${url.protocol}//${url.host}/weather-application-repo/api/alerts.php`;
+  return `${url.protocol}//${url.host}/api/alerts`;
 }
 
 function checkForNewAlerts() {

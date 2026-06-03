@@ -1,0 +1,125 @@
+<section class="py-5">
+    <div class="container">
+        <h1 class="mb-4 text-center"><i class="bi bi-chat-dots-fill text-primary me-2"></i>Live Чат (WebSockets)</h1>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+
+                    <div class="card-header bg-light d-flex align-items-center gap-2" id="connect-panel">
+                        <input type="text" id="username" class="form-control"
+                            placeholder="Введіть ваш логін (напр. Богдан)" required>
+                        <button class="btn btn-primary text-nowrap" id="connect-btn"
+                            onclick="connectToChat()">Підключитися</button>
+                    </div>
+
+                    <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;"
+                        id="chat-box">
+                        <div class="text-center text-muted mt-5" id="waiting-msg">
+                            Введіть логін та підключіться до сервера...
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-none" id="send-panel">
+                        <div class="input-group mb-2">
+                            <span class="input-group-text"><i class="bi bi-person-lock"></i></span>
+                            <input type="text" id="recipient" class="form-control"
+                                placeholder="Кому (залиште пустим, щоб відправити всім)">
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="message" class="form-control" placeholder="Введіть повідомлення..."
+                                onkeypress="handleEnter(event)">
+                            <button class="btn btn-success" onclick="sendMessage()"><i class="bi bi-send-fill"></i>
+                                Надіслати</button>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Щоб спілкуватися тет-а-тет, введіть точний логін
+                            співрозмовника у поле "Кому".</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    let ws;
+    let currentUsername = "";
+
+    function connectToChat() {
+        const usernameInput = document.getElementById('username').value.trim();
+        if (!usernameInput) {
+            alert("Будь ласка, введіть логін!");
+            return;
+        }
+
+        currentUsername = usernameInput;
+
+        ws = new WebSocket("ws://127.0.0.1:8080");
+
+        ws.onopen = function () {
+            document.getElementById('connect-panel').innerHTML = `<span class="badge bg-success fs-6"><i class="bi bi-wifi"></i> Підключено як: <b>${currentUsername}</b></span>`;
+            document.getElementById('waiting-msg').style.display = 'none';
+            document.getElementById('send-panel').classList.remove('d-none');
+
+            ws.send(JSON.stringify({ type: 'register', username: currentUsername }));
+            appendMessage("Система", "Ви успішно приєдналися до чату!", new Date().toLocaleTimeString(), false, true);
+        };
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'chat') {
+                appendMessage(data.sender, data.message, data.date, data.isPrivate);
+            }
+        };
+
+        ws.onclose = function () {
+            appendMessage("Система", "З'єднання з сервером втрачено. Перевірте, чи запущено terminal.", new Date().toLocaleTimeString(), false, true);
+        };
+    }
+
+    function sendMessage() {
+        const messageInput = document.getElementById('message');
+        const recipientInput = document.getElementById('recipient');
+        const msg = messageInput.value.trim();
+
+        if (!msg) return;
+
+        const data = {
+            type: 'chat',
+            recipient: recipientInput.value.trim(),
+            message: msg,
+            date: new Date().toLocaleString()
+        };
+
+        ws.send(JSON.stringify(data));
+        messageInput.value = '';
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function appendMessage(sender, text, date, isPrivate = false, isSystem = false) {
+        const chatBox = document.getElementById('chat-box');
+        const isMe = sender === currentUsername;
+
+        let align = isMe ? 'text-end' : 'text-start';
+        let bgClass = isMe ? 'bg-primary text-white' : 'bg-white border';
+        if (isPrivate) bgClass = 'bg-warning text-dark border-warning';
+        if (isSystem) { align = 'text-center'; bgClass = 'bg-secondary text-white'; }
+
+        const lockIcon = isPrivate ? '<i class="bi bi-lock-fill" title="Приватне повідомлення"></i>' : '';
+
+        const html = `
+                    <div class="mb-3 ${align}">
+                        <small class="text-muted d-block mb-1">${sender} ${lockIcon} • ${date}</small>
+                        <div class="d-inline-block p-2 rounded shadow-sm ${bgClass}" style="max-width: 75%;">
+                            ${text}
+                        </div>
+                    </div>
+                `;
+        chatBox.insertAdjacentHTML('beforeend', html);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>

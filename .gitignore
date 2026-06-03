@@ -1,3 +1,4 @@
 .vscode
 prepros.config
 .env
+.log

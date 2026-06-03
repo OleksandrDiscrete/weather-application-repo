@@ -8,10 +8,17 @@ include_once __DIR__ . "/../data/database.php";
 use WeatherMaster\Models\City;
 use WeatherMaster\Data\DatabaseInterface;
 
+interface CityRepositoryInterface
+{
+    public function add(City $city): bool;
+    public function getByName(string $name): ?City;
+    public function getAll(): array;
+}
+
 /**
  * @extends BaseRepository<City>
  */
-class CityRepository extends BaseRepository
+class CityRepository extends BaseRepository implements CityRepositoryInterface
 {
     public function __construct(DatabaseInterface $db)
     {

@@ -16,6 +16,7 @@ class VisitRepository extends BaseRepository
     public function __construct(DatabaseInterface $db)
     {
         parent::__construct($db);
+        $db->connect();
     }
 
     public function initTable(): void

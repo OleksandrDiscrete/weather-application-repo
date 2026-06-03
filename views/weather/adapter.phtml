@@ -1,0 +1,49 @@
+<section class="py-5">
+    <div class="container">
+        <h1 class="mb-4 text-center"><i class="bi bi-hdd-network text-info me-2"></i>Шаблон проєктування Adapter</h1>
+        <p class="text-center text-muted mb-5">Ця сторінка демонструє роботу з MySQL базою даних через універсальний
+            клас-адаптер.</p>
+        <div class="alert alert-danger"><?= $errorMessage ?></div>
+        <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Список міст (з MySQL через Адаптер Богдана)</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Місто</th>
+                            <th>Широта</th>
+                            <th>Довгота</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($cities)): ?>
+                            <?php foreach ($cities as $city): ?>
+                                <tr>
+                                    <td>
+                                        <?= $city['id'] ?>
+                                    </td>
+                                    <td>
+                                        <?= $city['name'] ?>
+                                    </td>
+                                    <td>
+                                        <?= $city['positionX'] ?>
+                                    </td>
+                                    <td>
+                                        <?= $city['positionY'] ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan='4' class='text-center text-muted'>Таблиця міст порожня</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

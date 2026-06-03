@@ -54,23 +54,23 @@ class Router
     /**
      * Match the incoming URL and execute the corresponding controller.
      */
-    public function dispatch(string $uri, string $method): void
+    public function dispatch(): void
     {
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $_SERVER['REQUEST_METHOD'];
+        
         $path = parse_url($uri, PHP_URL_PATH);
         $path = str_replace('/weather-application-repo/public', '', $path);
-
-        // Default to '/' if the path becomes empty after replacement
         if ($path === '') {
             $path = '/';
         }
 
-        // Check if the route exists for this HTTP method
+
         if (isset($this->routes[$method][$path])) {
             $route = $this->routes[$method][$path];
             $controllerName = $route['controller'];
             $actionName = $route['action'];
 
-            // Instantiate the Controller and call the specific Action method
             if (class_exists($controllerName)) {
                 $controllerInstance = new $controllerName();
                 if (method_exists($controllerInstance, $actionName)) {
