@@ -1,6 +1,7 @@
 <?php
 namespace WeatherMaster\Data\Adapters;
 
+include_once __DIR__ . "/../database.php";
 include_once __DIR__ . '/../drivers/mySqlDriver.php';
 
 use WeatherMaster\Data\DatabaseInterface;
