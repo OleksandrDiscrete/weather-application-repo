@@ -28,6 +28,21 @@ abstract class BaseController
         }
     }
 
+    protected function getApplicationAlert(): string
+    {
+        $alertFilePath = __DIR__ . "/data/alert.txt";
+
+        if (file_exists($alertFilePath)) {
+            $rawText = file_get_contents($alertFilePath);
+
+            if (trim($rawText) !== '') {
+                $formattedAlert = RegexService::textToHtml($rawText);
+                return $formattedAlert;
+            }
+        }
+        return "";
+    }
+
     /**
      * @param string $view Path to the view file (e.g., 'home/index')
      * @param array $data Associative array of variables to pass to the view

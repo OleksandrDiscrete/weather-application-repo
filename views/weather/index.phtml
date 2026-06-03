@@ -6,36 +6,40 @@
                 <p class="lead">Перевірте погоду в будь-якому місті України!</p>
                 <a class="btn btn-primary" href="#weather">Дізнатися погоду</a>
             </div>
-            <?php if (isset($applicationAlert)) { ?>
+            <?php if (!empty($applicationAlert)): ?>
                 <div class="alert alert-warning shadow-sm mt-4 mb-4 text-center" role="alert">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    {$applicationAlert}
+                    <?= $applicationAlert ?>
                 </div>
-            <?php } ?>
+            <?php endif; ?>
         </div>
     </div>
 </section>
+
 <section class="weather py-5" id="weather">
     <div class="container">
         <div class="weather__wrap">
-            <img src="$imagePath" alt="Magnifying glass icon" class="weather__image mb-4">
+            <img src="<?= htmlspecialchars($imagePath) ?>" alt="Magnifying glass icon" class="weather__image mb-4">
             <div class="text-center mb-3">
-                <h2>{$heading}</h2>
+                <h2><?= htmlspecialchars($heading) ?></h2>
             </div>
-            <form class="weather__form" method="POST" action="./index.php" class="mt-4">
+            
+            <form class="weather__form" method="POST" action="/" class="mt-4">
                 <div class="input-group mb-3">
                     <input type="text" list="cities" id="city" name="city" class="form-control"
                         placeholder="Введіть назву міста..." aria-describedby="saveButton">
-                    <button class="btn btn-secondary" type="submit" id="saveButton"><i
-                            class="bi bi-search"></i></button>
+                    <button class="btn btn-secondary" type="submit" id="saveButton">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
                 <datalist id="cities">
-                    <?php foreach ($cities as $city) { ?>
-                        <option value="<?= $city["name"] ?>" />
-                    <?php } ?>
+                    <?php foreach ($cities as $city): ?>
+                        <option value="<?= htmlspecialchars($city->name ?? $city['name']) ?>"></option>
+                    <?php endforeach; ?>
                 </datalist>
             </form>
-            <?php if (isset($weatherData)): ?>
+
+            <?php if (!empty($weatherData)): ?>
                 <?php
                 $tempC = $weatherData['current']['temp_c'];
                 $tempF = $weatherData['current']['temp_f'];
@@ -51,51 +55,45 @@
                 $pressureMb = $weatherData['current']['pressure_mb'];
                 $conditionText = $weatherData['current']['condition']['text'];
                 $iconUrl = $weatherData['current']['condition']['icon'];
-                // $statusClass = $weatherStatusClass;
 
                 $date = date('d.m.Y');
-                // $day = (int) date('d');
-                // $month = (int) date('m');
-                // $year = (int) date('Y');
-                // $dayName = RegexService::getDayOfWeek($day, $month, $year);
-                // $distanceInfo = $this->getDistanceToKyivContent($weatherData['location']);
                 ?>
                 <ul class="weather__list">
-                    <?php foreach ($weatherData as $value) { ?>
-                        <li class="weather__item">
-                            <div class="weather__item-day border-bottom pb-2 mb-3">
-                                <h4>{$dayName}</h4>
-                                <span class="text-muted">{$date}</span>
-                            </div>
-                            <h3 class="weather__item-status mb-3 text-center {$statusClass}">
-                                <img src="{$iconUrl}" alt="icon"> {$conditionText}
-                            </h3>
-                            <div class="weather__item-metrics">
-                                <p class="weather__item-metric"><strong>Температура:</strong> {$tempC}°C, {$tempF}°F, {$tempK}K
-                                </p>
-                                <p class="weather__item-metric"><strong>Відчувається як:</strong> {$feelsLikeC}°C</p>
-                                <p class="weather__item-metric"><strong>Вітер:</strong> {$windKph} км/год</p>
-                                <p class="weather__item-metric"><strong>Вологість:</strong> {$humidity}%</p>
-                                <p class="weather__item-metric"><strong>Опади:</strong> {$precipMm} мм</p>
-                                <p class="weather__item-metric"><strong>УФ-індекс:</strong> {$uvIndex}</p>
-                                <p class="weather__item-metric"><strong>Видимість:</strong> {$visKm} км</p>
-                                <p class="weather__item-metric"><strong>Тиск:</strong> {$pressureMb} mbars</p>
-                            </div>
+                    <li class="weather__item">
+                        <div class="weather__item-day border-bottom pb-2 mb-3">
+                            <h4><?= htmlspecialchars($dayName) ?></h4>
+                            <span class="text-muted"><?= $date ?></span>
+                        </div>
+                        <h3 class="weather__item-status mb-3 text-center <?= htmlspecialchars($statusClass ?? '') ?>">
+                            <img src="<?= htmlspecialchars($iconUrl) ?>" alt="icon"> <?= htmlspecialchars($conditionText) ?>
+                        </h3>
+                        <div class="weather__item-metrics">
+                            <p class="weather__item-metric"><strong>Температура:</strong> <?= $tempC ?>°C, <?= $tempF ?>°F, <?= $tempK ?>K</p>
+                            <p class="weather__item-metric"><strong>Відчувається як:</strong> <?= $feelsLikeC ?>°C</p>
+                            <p class="weather__item-metric"><strong>Вітер:</strong> <?= $windKph ?> км/год</p>
+                            <p class="weather__item-metric"><strong>Вологість:</strong> <?= $humidity ?>%</p>
+                            <p class="weather__item-metric"><strong>Опади:</strong> <?= $precipMm ?> мм</p>
+                            <p class="weather__item-metric"><strong>УФ-індекс:</strong> <?= $uvIndex ?></p>
+                            <p class="weather__item-metric"><strong>Видимість:</strong> <?= $visKm ?> км</p>
+                            <p class="weather__item-metric"><strong>Тиск:</strong> <?= $pressureMb ?> mbars</p>
+                        </div>
+                        
+                        <?php if (!empty($distanceInfo)): ?>
                             <div class="mt-4 pt-3 border-top text-center">
-                                {$distanceInfo}
+                                <?= htmlspecialchars($distanceInfo) ?>
                             </div>
-                        </li>
-                    <?php } ?>
+                        <?php endif; ?>
+                    </li>
                 </ul>
             <?php else: ?>
                 <p class="text-center text-muted mt-4 fs-5">
-                    <?= $alertMessage ?>
+                    <?= htmlspecialchars($alertMessage) ?>
                 </p>
             <?php endif; ?>
         </div>
     </div>
 </section>
-<?php if (isset($targetCity)) { ?>
+<?php if (!empty($targetCity) && !empty($targetCity->infoUrl)): ?>
     <section class="city-info py-4 mb-5">
         <div class="container">
             <div class="card shadow-sm border-0 bg-white p-4 text-center mx-auto"
@@ -109,10 +107,10 @@
                 <div>
                     <a href="<?= htmlspecialchars($targetCity->infoUrl) ?>" target="_blank" rel="noopener noreferrer"
                         class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">
-                        <i class="bi bi-globe me-2"></i> Більше про {$cityName}
+                        <i class="bi bi-globe me-2"></i> Більше про <?= htmlspecialchars($targetCity->name) ?>
                     </a>
                 </div>
             </div>
         </div>
     </section>
-<?php } ?>
+<?php endif; ?>

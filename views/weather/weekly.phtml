@@ -1,0 +1,141 @@
+<?php
+use WeatherMaster\Services\RegexService;
+use WeatherMaster\Services\WeatherApiClient;
+?>
+
+<section class="intro py-5">
+    <div class="container">
+        <div class="intro__wrap">
+            <div class="text-center">
+                <h1>Щотижневий прогноз</h1>
+                <p class="lead">Перевірте погоду в будь-якому місті України на найближчі дні!</p>
+                <a class="btn btn-primary mt-2" href="#weather">Переглянути прогноз</a>
+            </div>
+            <?php if (!empty($applicationAlert)): ?>
+                <div class="alert alert-warning shadow-sm mt-4 mb-4 text-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <?= $applicationAlert ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+<section class="weather py-5" id="weather">
+    <div class="container">
+        <div class="weather__wrap">
+            <img src="<?= htmlspecialchars($imagePath) ?>" alt="Magnifying glass icon" class="weather__image mb-4">
+            <div class="text-center mb-3">
+                <h2><?= htmlspecialchars($heading) ?></h2>
+            </div>
+            
+            <form class="weather__form" method="POST" action="/weekly" class="mt-4">
+                <div class="input-group mb-3">
+                    <input type="text" list="cities" id="city" name="city" class="form-control"
+                        placeholder="Введіть назву міста..." required aria-describedby="saveButton">
+                    <button class="btn btn-secondary" type="submit" id="saveButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <datalist id="cities">
+                    <?php foreach ($cities as $city): ?>
+                        <option value="<?= htmlspecialchars($city->name ?? $city['name']) ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+            </form>
+
+            <?php if (!empty($forecastData) && isset($forecastData['forecast']['forecastday'])): ?>
+                <ul class="weather__list d-flex flex-wrap gap-3">
+                    <?php foreach($forecastData['forecast']['forecastday'] as $i => $dayData): ?>
+                        <?php
+                        // 1. Date and Day Parsing
+                        $dateObj = strtotime($dayData['date']);
+                        $date = date('d.m.Y', $dateObj);
+                        $dayName = RegexService::getDayOfWeek(
+                            (int) date('d', $dateObj), 
+                            (int) date('m', $dateObj), 
+                            (int) date('Y', $dateObj)
+                        );
+
+                        // 2. Data Extraction: Index 0 uses 'current', others use 'day'
+                        if ($i === 0) {
+                            $tempC = $forecastData['current']['temp_c'];
+                            $tempF = $forecastData['current']['temp_f'];
+                            $windKph = $forecastData['current']['wind_kph'];
+                            $humidity = $forecastData['current']['humidity'];
+                            $uvIndex = $forecastData['current']['uv'];
+                            $precipMm = $forecastData['current']['precip_mm'];
+                            $visKm = $forecastData['current']['vis_km'];
+                            $conditionText = $forecastData['current']['condition']['text'];
+                            $iconUrl = $forecastData['current']['condition']['icon'];
+                            $statusCode = $forecastData['current']['condition']['code'];
+                        } else {
+                            $tempC = round($dayData['day']['avgtemp_c'], 1);
+                            $tempF = round($dayData['day']['avgtemp_f'], 1);
+                            $windKph = $dayData['day']['maxwind_kph'];
+                            $humidity = $dayData['day']['avghumidity'];
+                            $uvIndex = $dayData['day']['uv'];
+                            $precipMm = $dayData['day']['totalprecip_mm'];
+                            $visKm = $dayData['day']['avgvis_km'];
+                            $conditionText = $dayData['day']['condition']['text'];
+                            $iconUrl = $dayData['day']['condition']['icon'];
+                            $statusCode = $dayData['day']['condition']['code'];
+                        }
+
+                        $tempK = round($tempC + 273.15, 1);
+                        $windMs = round($windKph / 3.6, 1);
+                        $maxTemp = $dayData['day']['maxtemp_c'];
+                        $minTemp = $dayData['day']['mintemp_c'];
+                        $chanceOfRain = $dayData['day']['daily_chance_of_rain'];
+                        $statusClass = WeatherApiClient::getWeatherStatusClass($statusCode);
+                        ?>
+
+                        <li class="weather__item weather__item--mini" style="flex: 1 1 18.75rem;">
+                            <div class="weather__item-day border-bottom pb-2 mb-3">
+                                <h4 class="mb-1"><?= htmlspecialchars($dayName) ?></h4>
+                                <span class="text-muted"><?= $date ?></span>
+                            </div>
+                            <h5 class="weather__item-status mb-3 text-center <?= htmlspecialchars($statusClass) ?>">
+                                <img src="<?= htmlspecialchars($iconUrl) ?>" alt="icon"> <?= htmlspecialchars($conditionText) ?>
+                            </h5>
+                            <div class="weather__item-metrics">
+                                <p class="weather__item-metric"><strong>Температура:</strong> <?= $tempC ?>°C (<?= $minTemp ?>...<?= $maxTemp ?>), <?= $tempF ?>°F, <?= $tempK ?>K</p>
+                                <p class="weather__item-metric"><strong>Вітер:</strong> <?= $windKph ?> км/год (<?= $windMs ?> м/с)</p>
+                                <p class="weather__item-metric"><strong>Вологість:</strong> <?= $humidity ?>%</p>
+                                <p class="weather__item-metric"><strong>Ймовірність дощу:</strong> <?= $chanceOfRain ?>%</p>
+                                <p class="weather__item-metric"><strong>Опади:</strong> <?= $precipMm ?> мм</p>
+                                <p class="weather__item-metric"><strong>УФ-індекс:</strong> <?= $uvIndex ?></p>
+                                <p class="weather__item-metric"><strong>Видимість:</strong> <?= $visKm ?> км</p>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p class="text-center text-danger mt-4 fs-5">
+                    <?= htmlspecialchars($alertMessage ?? "Не вдалося завантажити прогноз.") ?>
+                </p>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
+<?php if (!empty($targetCity) && !empty($targetCity->infoUrl)): ?>
+    <section class="city-info py-4 mb-5">
+        <div class="container">
+            <div class="card shadow-sm border-0 bg-white p-4 text-center mx-auto"
+                style="max-width: 600px; border-radius: 20px;">
+                <h3 class="mb-3">Цікаво дізнатися більше про місто
+                    <?= htmlspecialchars($targetCity->name) ?>?
+                </h3>
+                <p class="text-muted mb-4">
+                    Перейдіть за посиланням, щоб переглянути офіційну інформацію, вебкамери або місцеві новини.
+                </p>
+                <div>
+                    <a href="<?= htmlspecialchars($targetCity->infoUrl) ?>" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">
+                        <i class="bi bi-globe me-2"></i> Більше про <?= htmlspecialchars($targetCity->name) ?>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
