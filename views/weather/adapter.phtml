@@ -3,7 +3,9 @@
         <h1 class="mb-4 text-center"><i class="bi bi-hdd-network text-info me-2"></i>Шаблон проєктування Adapter</h1>
         <p class="text-center text-muted mb-5">Ця сторінка демонструє роботу з MySQL базою даних через універсальний
             клас-адаптер.</p>
-        <div class="alert alert-danger"><?= $errorMessage ?></div>
+        <?php if (!empty($errorMessage)): ?>
+            <div class="alert alert-danger"><?= $errorMessage ?></div>
+        <?php endif; ?>
         <div class="card shadow-sm mx-auto" style="max-width: 800px;">
             <div class="card-header bg-dark text-white">
                 <h5 class="mb-0">Список міст (з MySQL через Адаптер Богдана)</h5>
@@ -29,10 +31,10 @@
                                         <?= $city['name'] ?>
                                     </td>
                                     <td>
-                                        <?= $city['positionX'] ?>
+                                        <?= $city['position_x'] ?>
                                     </td>
                                     <td>
-                                        <?= $city['positionY'] ?>
+                                        <?= $city['position_y'] ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

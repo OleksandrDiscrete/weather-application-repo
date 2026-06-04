@@ -1,6 +1,8 @@
 <?php
 namespace WeatherMaster\Controllers;
 
+include_once __DIR__ . "/../services/api.php";
+
 use WeatherMaster\Data\Database;
 use WeatherMaster\Helpers\ForecastHelper;
 use WeatherMaster\Repositories\CityRepository;
@@ -228,7 +230,6 @@ class WeatherController extends BaseController
             $this->parsedEntries[] = $this->currentEntry;
         }
     }
-
     private function ensureXmlExists(): void
     {
         if (!file_exists($this->xmlFilePath)) {
@@ -245,9 +246,9 @@ class WeatherController extends BaseController
         ];
 
         try {
-            $adapter = new MySqlDatabaseAdapter("127.0.0.1", "weather_master_db", "root", "");
+            $adapter = new MySqlDatabaseAdapter("localhost", "weather_db", "root", "root");
             $adapter->connect();
-            $options['cities'] = $adapter->fetchMany("SELECT * FROM cities");
+            $options['cities'] = $adapter->fetchMany("SELECT * FROM city");
             $adapter->disconnect();
 
         } catch (\Throwable $e) {
